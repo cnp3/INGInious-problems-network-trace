@@ -53,12 +53,14 @@ Header IPv6:
       length: 8
   - Source Address:
       byte_length: 16
+      format: ipv6
   - Destination Address:
       byte_length: 16
+      format: ipv6
   - Payload:
-      conditions:
-        - Payload Length:
-            neq: 0
+      fallback:
+        length: '*'
+        format: bytes
 Header Hop-by-Hop:
   - type: Header
   - Next Header:
@@ -1194,7 +1196,6 @@ Header TCP:
       triggers:
         - Options:
             byte_length:
-              3: 0
               5: 0
               6: 4
               7: 8
@@ -1666,8 +1667,10 @@ Header UDP:
       length: 16
   - Length:
       length: 16
+      triggers:
+        - Data:
+            byte_length: set
   - Checksum:
       length: 16
   - Data:
-      length: '*'
       format: hex
