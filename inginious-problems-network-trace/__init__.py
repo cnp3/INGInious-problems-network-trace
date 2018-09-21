@@ -124,7 +124,7 @@ class DisplayableNetworkTraceProblem(NetworkTraceProblem, DisplayableProblem):
             trace = None
         stream = []
         for i, p in enumerate(self._trace):
-            stream.append((len(b64decode(p)), 'TODO', 'incomplete' if i in self._hidden_fields else 'complete'))
+            stream.append((len(b64decode(p)), get_summary(trace[i][1]), 'incomplete' if i in self._hidden_fields else 'complete'))
         return str(DisplayableNetworkTraceProblem.get_renderer(template_helper).network_trace(self.get_id(), trace, stream, type=type, tuple=tuple))
 
     @classmethod
@@ -178,6 +178,28 @@ def hide_field(dissection, field_name, hidden_fields):
         return dissection[0], hide_field(dissection[1], field_name, hidden_fields), dissection[2], dissection[3]
     else:
         return dissection
+
+
+def get_summary(dissection):
+    summary_fields = {'TCP': {'NS', 'CWR', 'ECE', 'URG', 'ACK', 'PSH', 'RST', 'SYN', 'FIN'}}
+    base_format = '<{name}: {details}>'
+
+    struct_name = dissection[0][0] if type(dissection[0][1]) is not tuple or dissection[0][1][0] == '' else dissection[0][1][0]
+    fields = summary_fields.get(struct_name, [])
+    flags = []
+    for f, v, _, _ in dissection[0][1][1]:
+        if f in fields:
+            if v:
+                flags.append(f)
+
+    if not flags:
+        for f in dissection[0][1][1]:
+            try:
+                return get_summary([f])
+            except:
+                pass
+
+    return base_format.format(name=struct_name, details=', '.join(flags))
 
 
 def init(plugin_manager, course_factory, client, plugin_config):

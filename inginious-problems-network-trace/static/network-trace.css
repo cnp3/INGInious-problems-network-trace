@@ -19,3 +19,7 @@ span.feedback[data-field] {
 .structure > ul {
     padding-left: 5px;
 }
+
+.structure ul {
+    padding-left: 20px;
+}
