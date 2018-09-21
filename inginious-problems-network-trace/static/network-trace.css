@@ -1,0 +1,21 @@
+.structure {
+    font-size: 80%;
+}
+
+.hex-view {
+    font-size: 100%;
+}
+
+span.feedback[data-field] {
+    padding: 2px;
+}
+
+.hex-view code {
+    padding: 2px;
+    color: initial;
+    background-color: initial;
+}
+
+.structure > ul {
+    padding-left: 5px;
+}
