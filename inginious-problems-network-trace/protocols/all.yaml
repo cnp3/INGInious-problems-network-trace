@@ -929,7 +929,7 @@ ICMPv6 Destination Unreachable:
       length: 32
   - Info packet:
       length: '*'
-      format: hex
+      format: bytes
 ICMPv6 Packet Too Big:
   - type: [Header, ICMPv6]
   - Type:
@@ -944,7 +944,7 @@ ICMPv6 Packet Too Big:
       length: 32
   - Info packet:
       length: '*'
-      format: hex
+      format: bytes
 ICMPv6 Time Exceeded:
   - type: [Header, ICMPv6]
   - Type:
@@ -959,7 +959,7 @@ ICMPv6 Time Exceeded:
       length: 32
   - Info packet:
       length: '*'
-      format: hex
+      format: bytes
 ICMPv6 Echo Request:
   - type: [Header, ICMPv6]
   - Type:
@@ -976,7 +976,7 @@ ICMPv6 Echo Request:
       length: 16
   - Info packet:
       length: '*'
-      format: hex
+      format: bytes
 ICMPv6 Echo Reply:
   - type: [Header, ICMPv6]
   - Type:
@@ -993,7 +993,7 @@ ICMPv6 Echo Reply:
       length: 16
   - Info packet:
       length: '*'
-      format: hex
+      format: bytes
 ICMPv6 Router Solicitation:
   - type: [Header, ICMPv6]
   - Type:
@@ -1168,7 +1168,7 @@ Redirected Header:
       length: 48
       values: 0
   - IP Header and Data:
-      format: hex
+      format: bytes
 MTU:
   - type: [ICMPv6 Option, ICMPv6 Option SMP]
   - Type:
@@ -1238,7 +1238,7 @@ TCP:
       parse: TCP Option
   - Data:
       length: '*'
-      format: hex
+      format: bytes
 End of Option List:
   - type: TCP Option
   - Kind:
@@ -1673,4 +1673,7 @@ UDP:
   - Checksum:
       length: 16
   - Data:
-      format: hex
+      format: bytes
+      fallback:
+        length: '*'
+        format: bytes
