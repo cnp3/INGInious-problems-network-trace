@@ -1,24 +1,24 @@
 # TODO: Simplify this file with YAML anchors
 
 top:
-  - Header IPv6
-  - Header TCP
-  - Header UDP
+  - IPv6
+  - TCP
+  - UDP
   - Header Hop-by-Hop
   - Header Routing
   - Header Fragment
   - Header Destination
-  - Header ICMPv6 Destination Unreachable
-  - Header ICMPv6 Packet Too Big
-  - Header ICMPv6 Time Exceeded
-  - Header ICMPv6 Echo Request
-  - Header ICMPv6 Echo Reply
-  - Header ICMPv6 Router Solicitation
-  - Header ICMPv6 Router Advertisement
-  - Header ICMPv6 Neighbor Solicitation
-  - Header ICMPv6 Neighbor Advertisement
-  - Header ICMPv6 Redirect
-Header IPv6:
+  - ICMPv6 Destination Unreachable
+  - ICMPv6 Packet Too Big
+  - ICMPv6 Time Exceeded
+  - ICMPv6 Echo Request
+  - ICMPv6 Echo Reply
+  - ICMPv6 Router Solicitation
+  - ICMPv6 Router Advertisement
+  - ICMPv6 Neighbor Solicitation
+  - ICMPv6 Neighbor Advertisement
+  - ICMPv6 Redirect
+IPv6:
   - type: Header
   - Version:
       length: 4
@@ -42,12 +42,12 @@ Header IPv6:
         - Payload:
             parse:
               0: Header Hop-by-Hop
-              4: Header IPv6
-              6: Header TCP
-              17: Header UDP
+              4: IPv6
+              6: TCP
+              17: UDP
               43: Header Routing
               44: Header Fragment
-              58: Header ICMPv6
+              58: ICMPv6
               60: Header Destination
   - Hop Limit:
       length: 8
@@ -69,12 +69,12 @@ Header Hop-by-Hop:
         - Option:
             parse:
               0: Header Hop-by-Hop
-              4: Header IPv6
-              6: Header TCP
-              17: Header UDP
+              4: IPv6
+              6: TCP
+              17: UDP
               43: Header Routing
               44: Header Fragment
-              58: Header ICMPv6
+              58: ICMPv6
               60: Header Destination
   - Hdr Ext Len:
       length: 8
@@ -347,12 +347,12 @@ Header Routing:
         - Type-specific Data:
             parse:
               0: Header Hop-by-Hop
-              4: Header IPv6
-              6: Header TCP
-              17: Header UDP
+              4: IPv6
+              6: TCP
+              17: UDP
               43: Header Routing
               44: Header Fragment
-              58: Header ICMPv6
+              58: ICMPv6
               60: Header Destination
   - Hdr Ext Len:
       length: 8
@@ -644,12 +644,12 @@ Header Destination:
         - Option:
             parse:
               0: Header Hop-by-Hop
-              4: Header IPv6
-              6: Header TCP
-              17: Header UDP
+              4: IPv6
+              6: TCP
+              17: UDP
               43: Header Routing
               44: Header Fragment
-              58: Header ICMPv6
+              58: ICMPv6
               60: Header Destination
   - Hdr Ext Len:
       length: 8
@@ -915,8 +915,8 @@ Header Destination:
   - Option:
       length: 0
   - next: Header
-Header ICMPv6 Destination Unreachable:
-  - type: [Header, Header ICMPv6]
+ICMPv6 Destination Unreachable:
+  - type: [Header, ICMPv6]
   - Type:
       length: 8
       values: 1
@@ -930,8 +930,8 @@ Header ICMPv6 Destination Unreachable:
   - Info packet:
       length: '*'
       format: hex
-Header ICMPv6 Packet Too Big:
-  - type: [Header, Header ICMPv6]
+ICMPv6 Packet Too Big:
+  - type: [Header, ICMPv6]
   - Type:
       length: 8
       values: 2
@@ -945,8 +945,8 @@ Header ICMPv6 Packet Too Big:
   - Info packet:
       length: '*'
       format: hex
-Header ICMPv6 Time Exceeded:
-  - type: [Header, Header ICMPv6]
+ICMPv6 Time Exceeded:
+  - type: [Header, ICMPv6]
   - Type:
       length: 8
       values: 3
@@ -960,8 +960,8 @@ Header ICMPv6 Time Exceeded:
   - Info packet:
       length: '*'
       format: hex
-Header ICMPv6 Echo Request:
-  - type: [Header, Header ICMPv6]
+ICMPv6 Echo Request:
+  - type: [Header, ICMPv6]
   - Type:
       length: 8
       values: 128
@@ -977,8 +977,8 @@ Header ICMPv6 Echo Request:
   - Info packet:
       length: '*'
       format: hex
-Header ICMPv6 Echo Reply:
-  - type: [Header, Header ICMPv6]
+ICMPv6 Echo Reply:
+  - type: [Header, ICMPv6]
   - Type:
       length: 8
       values: 129
@@ -994,8 +994,8 @@ Header ICMPv6 Echo Reply:
   - Info packet:
       length: '*'
       format: hex
-Header ICMPv6 Router Solicitation:
-  - type: [Header, Header ICMPv6]
+ICMPv6 Router Solicitation:
+  - type: [Header, ICMPv6]
   - Type:
       length: 8
       values: 133
@@ -1008,8 +1008,8 @@ Header ICMPv6 Router Solicitation:
       length: 32
   - Option:
       parse: Source Link-Layer Address
-Header ICMPv6 Router Advertisement:
-  - type: [Header, Header ICMPv6]
+ICMPv6 Router Advertisement:
+  - type: [Header, ICMPv6]
   - Type:
       length: 8
       values: 134
@@ -1034,8 +1034,8 @@ Header ICMPv6 Router Advertisement:
       length: 32
   - Option:
       parse: ICMPv6 Option SMP
-Header ICMPv6 Neighbor Solicitation:
-  - type: [Header, Header ICMPv6]
+ICMPv6 Neighbor Solicitation:
+  - type: [Header, ICMPv6]
   - Type:
       length: 8
       values: 135
@@ -1050,8 +1050,8 @@ Header ICMPv6 Neighbor Solicitation:
       length: 128
   - Option:
       parse: Source Link-Layer Address
-Header ICMPv6 Neighbor Advertisement:
-  - type: [Header, Header ICMPv6]
+ICMPv6 Neighbor Advertisement:
+  - type: [Header, ICMPv6]
   - Type:
       length: 8
       values: 136
@@ -1074,8 +1074,8 @@ Header ICMPv6 Neighbor Advertisement:
       length: 128
   - Option:
       parse: Target Link-Layer Address
-Header ICMPv6 Redirect:
-  - type: [Header, Header ICMPv6]
+ICMPv6 Redirect:
+  - type: [Header, ICMPv6]
   - Type:
       length: 8
       values: 136
@@ -1182,7 +1182,7 @@ MTU:
       values: 0
   - MTU:
       length: 32
-Header TCP:
+TCP:
   - Source Port:
       length: 16
   - Destination Port:
@@ -1659,7 +1659,7 @@ MPTCP MP_FAIL:
   - Data Sequence Number:
       length: 64
   - next: TCP Option
-Header UDP:
+UDP:
   - type: Header
   - Source Port:
       length: 16
