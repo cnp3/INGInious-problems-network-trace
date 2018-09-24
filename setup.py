@@ -5,7 +5,7 @@ setup(
     version="0.1.dev0",
     description="TODO",
     packages=find_packages(),
-    install_requires=["inginious>=0.5.dev0", "quic-tracker-dissector", "dpkt", "PyYAML"],
+    install_requires=["inginious", "quic-tracker-dissector", "dpkt", "PyYAML"],
     tests_require=[],
     extras_require={},
     scripts=[],
