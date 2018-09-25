@@ -75,15 +75,15 @@ class NetworkTraceProblem(Problem):
     def parse_problem(cls, problem_content):
         problem_content = Problem.parse_problem(problem_content)
         try:
-            problem_content['trace'] = json.loads(problem_content['trace'])
+            problem_content['trace'] = json.loads(problem_content['trace']) or []
         except ValueError as e:
             raise ValueError('Network trace does not contain valid JSON: %s' % e)
         try:
-            problem_content['hide'] = load(problem_content['hide'])
+            problem_content['hide'] = load(problem_content['hide']) or {}
         except ValueError as e:
             raise ValueError('Hide fields does not contain valid YAML: %s' % e)
         try:
-            problem_content['feedback'] = load(problem_content['feedback'])
+            problem_content['feedback'] = load(problem_content['feedback']) or {}
         except ValueError as e:
             raise ValueError('Feedback does not contain valid YAML: %s' % e)
         problem_content['shuffle'] = problem_content.get('shuffle') == 'on'
