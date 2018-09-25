@@ -3,6 +3,7 @@ import os
 import traceback
 from base64 import b64decode
 from copy import deepcopy
+import itertools
 
 import web
 from yaml import load
@@ -181,25 +182,32 @@ def hide_field(dissection, field_name, hidden_fields):
 
 
 def get_summary(dissection):
-    summary_fields = {'TCP': {'NS', 'CWR', 'ECE', 'URG', 'ACK', 'PSH', 'RST', 'SYN', 'FIN'}}
+    summary_fields = {'TCP': {'NS': 'flag', 'CWR': 'flag', 'ECE': 'flag', 'URG': 'flag', 'ACK': 'flag', 'PSH': 'flag', 'RST': 'flag', 'SYN': 'flag', 'FIN': 'flag', 'Sequence Number': {'name': 'SEQ'}, 'Acknowledgment Number': {'name': 'ACK'}, 'Options': {'Maximum Segment Size': 'MSS', 'Sack-Permitted Option': 'SACK_PERM', 'Timestamps Option': 'TS', 'Window Scale Option': 'WSO', 'No-Operation': None}}}
     base_format = '<{name}: {details}>'
 
     struct_name = dissection[0][0] if type(dissection[0][1]) is not tuple or dissection[0][1][0] == '' else dissection[0][1][0]
     fields = summary_fields.get(struct_name, [])
     flags = []
+    values = []
+    options = []
     for f, v, _, _ in dissection[0][1][1]:
         if f in fields:
-            if v:
-                flags.append(f)
+            if fields[f] == 'flag':
+                if v == 1:
+                    flags.append(f)
+            elif len(fields[f]) == 1:
+                values.append((fields[f]['name'], v))
+            elif fields[f].get(v[0], v[0]) is not None:
+                options.append(fields[f].get(v[0], v[0]))
 
-    if not flags:
+    if not flags and not values:
         for f in dissection[0][1][1]:
             try:
                 return get_summary([f])
             except:
                 pass
 
-    return base_format.format(name=struct_name, details=', '.join(flags))
+    return base_format.format(name=struct_name, details=', '.join(itertools.chain(flags, ('{}: {}'.format(n, v) for n, v in values), options)))
 
 
 def init(plugin_manager, course_factory, client, plugin_config):
