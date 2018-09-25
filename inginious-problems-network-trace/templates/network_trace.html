@@ -110,8 +110,8 @@ $for p in trace:
         const table = $$('#table-$id').DataTable({stateSave: true, searching: false, rowReorder:  {
             selector: 'td:nth-child(1)',
             update: false,
-            dataSrc: 1
-        }, ordering: false, paging: false, info: false});
+            dataSrc: 1,
+        }, ordering: false, paging: false, info: false, scrollY: '306px', scrollCollapse: true});
         table.on('row-reordered', function (e, diff, edit) {
             console.log(edit);
             if (diff.length >= 2) {
