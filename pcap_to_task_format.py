@@ -5,6 +5,8 @@ from base64 import encodebytes
 
 import dpkt
 
+from dpkt.ethernet import ETH_TYPE_IP, ETH_TYPE_IP6
+
 _levels = {
     'network': 0,
     'transport': 1,
@@ -30,8 +32,20 @@ with open(sys.argv[1], 'rb') as f:
     pcap = dpkt.pcap.Reader(f)
     for _, buf in pcap:
         struct = dpkt.ethernet.Ethernet(buf)
-        buf = b''
-        level = 0
+        if struct.type not in (ETH_TYPE_IP, ETH_TYPE_IP6):  # This may not be an Ethernet frame
+            if (buf[0] & 0xF0) >> 4 is 4:
+                struct = dpkt.ip.IP(buf)
+            elif (buf[0] & 0xF0) >> 4 is 6:
+                struct = dpkt.ip.IP6(buf)
+            else:
+                print("ERROR: A packet started without an Ethernet or IPv(4|6) header. Aborting.")
+                exit(-1)
+            buf = b''.join(struct.pack().rsplit(bytes(struct.data))) if type(struct) is not bytes and struct.data else bytes(struct)
+            level = 1
+        else:
+            buf = b''
+            level = 0
+            
         while level <= levels[-1]:
             struct = struct.data
             if level >= levels[0]:
