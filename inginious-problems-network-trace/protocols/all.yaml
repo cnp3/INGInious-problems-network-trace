@@ -1706,6 +1706,7 @@ SETTINGS_HEADER_TABLE_SIZE:
       values: 0x1
   - Value:
       length: 32
+  - next: SETTINGS Parameters
 SETTINGS_ENABLE_PUSH:
   - type: SETTINGS Parameters
   - Identifier:
@@ -1713,6 +1714,7 @@ SETTINGS_ENABLE_PUSH:
       values: 0x2
   - Value:
       length: 32
+  - next: SETTINGS Parameters
 SETTINGS_MAX_CONCURRENT_STREAMS:
   - type: SETTINGS Parameters
   - Identifier:
@@ -1720,6 +1722,7 @@ SETTINGS_MAX_CONCURRENT_STREAMS:
       values: 0x3
   - Value:
       length: 32
+  - next: SETTINGS Parameters
 SETTINGS_INITIAL_WINDOW_SIZE:
   - type: SETTINGS Parameters
   - Identifier:
@@ -1727,6 +1730,7 @@ SETTINGS_INITIAL_WINDOW_SIZE:
       values: 0x4
   - Value:
       length: 32
+  - next: SETTINGS Parameters
 SETTINGS_MAX_FRAME_SIZE:
   - type: SETTINGS Parameters
   - Identifier:
@@ -1734,6 +1738,7 @@ SETTINGS_MAX_FRAME_SIZE:
       values: 0x5
   - Value:
       length: 32
+  - next: SETTINGS Parameters
 SETTINGS_MAX_HEADER_LIST_SIZE:
   - type: SETTINGS Parameters
   - Identifier:
@@ -1741,3 +1746,4 @@ SETTINGS_MAX_HEADER_LIST_SIZE:
       values: 0x6
   - Value:
       length: 32
+  - next: SETTINGS Parameters
