@@ -6,6 +6,7 @@ from copy import deepcopy
 import itertools
 
 import web
+from inginious.frontend.parsable_text import ParsableText
 from yaml import load
 from inginious.common.tasks_problems import Problem
 from inginious.frontend.task_problems import DisplayableProblem
@@ -35,6 +36,7 @@ class NetworkTraceProblem(Problem):
         self._trace = content.get('trace', [])
         self._hidden_fields = content.get('hide', {})  # The fields to be hidden
         self._field_feedback = content.get('feedback', {})
+        self._header = content.get('header', '')
         Problem.__init__(self, task, problemid, content, translations)
 
     @classmethod
@@ -126,7 +128,7 @@ class DisplayableNetworkTraceProblem(NetworkTraceProblem, DisplayableProblem):
         stream = []
         for i, p in enumerate(self._trace):
             stream.append((len(b64decode(p)), get_summary(trace[i][1]), 'incomplete' if i in self._hidden_fields else 'complete'))
-        return str(DisplayableNetworkTraceProblem.get_renderer(template_helper).network_trace(self.get_id(), trace, stream, type=type, tuple=tuple))
+        return str(DisplayableNetworkTraceProblem.get_renderer(template_helper).network_trace(self.get_id(), ParsableText.rst(self._header), trace, stream, type=type, tuple=tuple))
 
     @classmethod
     def show_editbox(cls, template_helper, key):
