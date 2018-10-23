@@ -1,4 +1,4 @@
-$def with (id, trace, stream, type, tuple)
+$def with (id, header, trace, stream, type, tuple)
 
 $code:
     def decode(hex_byte):
@@ -49,6 +49,7 @@ $code:
         ret += '<ul>{}</ul>'.format(print_struct(dissection, p_number))
         return ret + '</div></div>'
 
+$:header
 <table id="table-$id" class="table table-bordered table-hover compact stream">
     <thead>
     <tr>

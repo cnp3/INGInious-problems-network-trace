@@ -1237,8 +1237,10 @@ TCP:
   - Options:
       parse: TCP Option
   - Data:
-      length: '*'
-      format: bytes
+      parse: HTTP/2 Frame
+      fallback:
+        length: '*'
+        format: bytes
 End of Option List:
   - type: TCP Option
   - Kind:
@@ -1677,3 +1679,71 @@ UDP:
       fallback:
         length: '*'
         format: bytes
+HTTP/2 SETTINGS:
+  - type: HTTP/2 Frame
+  - Length:
+      length: 24
+      format: int
+      triggers:
+        - SETTINGS Parameters:
+            byte_length: set
+  - Type:
+      length: 8
+      values: 0x4
+  - Unused Flags:
+      length: 7
+  - ACK:
+      length: 1
+  - Stream Identifier:
+      length: 32
+  - SETTINGS Parameters:
+      parse: SETTINGS Parameters
+  - next: HTTP/2 Frame
+SETTINGS_HEADER_TABLE_SIZE:
+  - type: SETTINGS Parameters
+  - Identifier:
+      length: 16
+      values: 0x1
+  - Value:
+      length: 32
+  - next: SETTINGS Parameters
+SETTINGS_ENABLE_PUSH:
+  - type: SETTINGS Parameters
+  - Identifier:
+      length: 16
+      values: 0x2
+  - Value:
+      length: 32
+  - next: SETTINGS Parameters
+SETTINGS_MAX_CONCURRENT_STREAMS:
+  - type: SETTINGS Parameters
+  - Identifier:
+      length: 16
+      values: 0x3
+  - Value:
+      length: 32
+  - next: SETTINGS Parameters
+SETTINGS_INITIAL_WINDOW_SIZE:
+  - type: SETTINGS Parameters
+  - Identifier:
+      length: 16
+      values: 0x4
+  - Value:
+      length: 32
+  - next: SETTINGS Parameters
+SETTINGS_MAX_FRAME_SIZE:
+  - type: SETTINGS Parameters
+  - Identifier:
+      length: 16
+      values: 0x5
+  - Value:
+      length: 32
+  - next: SETTINGS Parameters
+SETTINGS_MAX_HEADER_LIST_SIZE:
+  - type: SETTINGS Parameters
+  - Identifier:
+      length: 16
+      values: 0x6
+  - Value:
+      length: 32
+  - next: SETTINGS Parameters
