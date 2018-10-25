@@ -1,11 +1,12 @@
 import json
 import os
 import traceback
-from base64 import b64decode
 from copy import deepcopy
 import itertools
 
+import dpkt
 import web
+from dpkt.ethernet import ETH_TYPE_IP, ETH_TYPE_IP6
 from inginious.frontend.parsable_text import ParsableText
 from yaml import load
 from inginious.common.tasks_problems import Problem
@@ -33,7 +34,8 @@ class StaticMockPage(object):
 class NetworkTraceProblem(Problem):
     def __init__(self, task, problemid, content, translations=None):
         self._problemid = problemid
-        self._trace = content.get('trace', [])
+        self._task = task
+        self._trace = transform_pcap(task, content.get('pcap', ''), content.get('range', 'network'))
         self._hidden_fields = content.get('hide', {})  # The fields to be hidden
         self._field_feedback = content.get('feedback', {})
         self._header = content.get('header', '')
@@ -77,10 +79,6 @@ class NetworkTraceProblem(Problem):
     def parse_problem(cls, problem_content):
         problem_content = Problem.parse_problem(problem_content)
         try:
-            problem_content['trace'] = json.loads(problem_content['trace']) or []
-        except ValueError as e:
-            raise ValueError('Network trace does not contain valid JSON: %s' % e)
-        try:
             problem_content['hide'] = load(problem_content['hide']) or {}
         except ValueError as e:
             raise ValueError('Hide fields does not contain valid YAML: %s' % e)
@@ -89,6 +87,12 @@ class NetworkTraceProblem(Problem):
         except ValueError as e:
             raise ValueError('Feedback does not contain valid YAML: %s' % e)
         problem_content['shuffle'] = problem_content.get('shuffle') == 'on'
+        if problem_content.get('range', '').strip():
+            r = problem_content.get('range').strip()
+            values = ('network', 'transport', 'application', 'network-transport', 'network-application', 'transport-application')
+            if r not in values:
+                raise ValueError('The network layers selected must be a value in ' + repr(values))
+            problem_content['range'] = r
         return problem_content
 
     @classmethod
@@ -127,7 +131,7 @@ class DisplayableNetworkTraceProblem(NetworkTraceProblem, DisplayableProblem):
             trace = None
         stream = []
         for i, p in enumerate(self._trace):
-            stream.append((len(b64decode(p)), get_summary(trace[i][1]), 'incomplete' if i in self._hidden_fields else 'complete'))
+            stream.append((len(p), get_summary(trace[i][1]), 'incomplete' if i in self._hidden_fields else 'complete'))
         return str(DisplayableNetworkTraceProblem.get_renderer(template_helper).network_trace(self.get_id(), ParsableText.rst(self._header), trace, stream, type=type, tuple=tuple))
 
     @classmethod
@@ -146,7 +150,7 @@ def split_every_n(string, n=2):
 def dissect_problem(trace):
     with open(os.path.join(_dir_path, 'protocols', 'all.yaml')) as f:
         protocols = load(f)
-    return [(split_every_n(bytearray(b64decode(p)).hex()), parse_packet_with(bytearray(b64decode(p)), deepcopy(protocols), context={})) for p in trace]
+    return [(split_every_n(bytearray(p).hex()), parse_packet_with(bytearray(p), deepcopy(protocols), context={})) for p in trace]
 
 
 def get_hidden_fields(packet, hidden_fields):
@@ -210,6 +214,53 @@ def get_summary(dissection):
                 pass
 
     return base_format.format(name=struct_name, details=', '.join(itertools.chain(flags, ('{}: {}'.format(n, v) for n, v in values), options)))
+
+
+def transform_pcap(task, filename, level_range):
+    _levels = {
+        'network': 0,
+        'transport': 1,
+        'application': 2
+    }
+    levels = [_levels[s] for s in level_range.split('-')]
+    output = []
+
+    fs = task.get_fs()
+    if not fs.exists(filename) or not fs:
+        return []
+    try:
+        f = fs.get_fd(filename)
+    except IOError:
+        return []
+    pcap = dpkt.pcap.Reader(f)
+    for _, buf in pcap:
+        struct = dpkt.ethernet.Ethernet(buf)
+        if struct.type not in (ETH_TYPE_IP, ETH_TYPE_IP6):  # This may not be an Ethernet frame
+            if (buf[0] & 0xF0) >> 4 is 4:
+                struct = dpkt.ip.IP(buf)
+            elif (buf[0] & 0xF0) >> 4 is 6:
+                struct = dpkt.ip.IP6(buf)
+            else:
+                break
+            buf = b''.join(struct.pack().rsplit(bytes(struct.data))) if type(struct) is not bytes and struct.data else bytes(struct)
+            level = 1
+        else:
+            buf = b''
+            level = 0
+
+        while level <= levels[-1]:
+            struct = struct.data
+            if level >= levels[0]:
+                buf += b''.join(struct.pack().rsplit(bytes(struct.data))) if type(struct) is not bytes and struct.data else bytes(struct)
+            elif level == levels[-1]:
+                buf += struct.pack()
+            level += 1
+
+        if buf:
+            output.append(buf)
+    f.close()
+
+    return output
 
 
 def init(plugin_manager, course_factory, client, plugin_config):

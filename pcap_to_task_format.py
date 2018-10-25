@@ -19,10 +19,8 @@ def main():
         print("Usage: {} input_pcap level_range".format(sys.argv[0]))
         print("Examples of use")
         print("    {} input.pcap network  # Only extract IP headers".format(sys.argv[0]))
-        print(
-            "    {} input.pcap network-application  # Extracts everything starting from the IP header".format(sys.argv[0]))
-        print("    {} input.pcap transport-application  # Extracts everything starting from the transport header".format(
-            sys.argv[0]))
+        print("    {} input.pcap network-application  # Extracts everything starting from the IP header".format(sys.argv[0]))
+        print("    {} input.pcap transport-application  # Extracts everything starting from the transport header".format(sys.argv[0]))
         exit(-1)
 
     level_range = sys.argv[2]
