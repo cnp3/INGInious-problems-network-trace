@@ -7,9 +7,15 @@ $def with (key)
     </div>
 </div>
 <div class="form-group row">
-    <label for="trace-PID" class="col-sm-2 control-label">Network trace</label>
+    <label for="pcap-PID" class="col-sm-2 control-label">Trace file (.pcap only)</label>
     <div class="col-sm-10">
-        <textarea id="trace-PID" class="form-control" name="problem[PID][trace]"></textarea>
+        <input type="text" id="pcap-PID" class="form-control" name="problem[PID][pcap]"/>
+    </div>
+</div>
+<div class="form-group row">
+    <label for="range-PID" class="col-sm-2 control-label">Network layers</label>
+    <div class="col-sm-10">
+        <input type="text" id="range-PID" class="form-control" name="problem[PID][range]" placeholder="network, transport, application or a combination such as network-transport"/>
     </div>
 </div>
 <div class="form-group row">
