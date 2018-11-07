@@ -41,6 +41,7 @@ class NetworkTraceProblem(Problem):
         self._field_feedback = content.get('feedback', {})
         self._header = content.get('header', '')
         self._shuffle = content.get('shuffle', False)
+        self._shuffle_feedback = (content.get('shuffle-feedback') or '').strip() or 'The order of packets is incorrect'
         Problem.__init__(self, task, problemid, content, translations)
 
     @classmethod
@@ -83,7 +84,7 @@ class NetworkTraceProblem(Problem):
         problem_feedback = ('\n'.join(["- **{}**: {}".format(f, self._field_feedback[f]) for f in erroneous_fields])) + '\n'
 
         if not order_is_correct:
-            problem_feedback += '\n\nThe order of packets is incorrect\n\n'
+            problem_feedback += '\n\n{}\n\n'.format(self._shuffle_feedback)
 
         return sum(feedbacks.values()) == len(feedbacks) and order_is_correct, problem_feedback, [json.dumps({'fields': feedbacks, 'packets': packets})], 0
 
