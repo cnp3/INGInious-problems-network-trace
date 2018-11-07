@@ -3,6 +3,7 @@ import os
 import traceback
 from copy import deepcopy
 import itertools
+from random import Random
 
 import dpkt
 import web
@@ -39,6 +40,7 @@ class NetworkTraceProblem(Problem):
         self._hidden_fields = content.get('hide', {})  # The fields to be hidden
         self._field_feedback = content.get('feedback', {})
         self._header = content.get('header', '')
+        self._shuffle = content.get('shuffle', False)
         Problem.__init__(self, task, problemid, content, translations)
 
     @classmethod
@@ -49,7 +51,7 @@ class NetworkTraceProblem(Problem):
         return all('{}:{}:{}'.format(self._problemid, p_idx, f) in task_input for p_idx in self._hidden_fields for f in self._hidden_fields[p_idx])
 
     def input_type(self):
-        return str  # TODO: What is this ?
+        return list
 
     def check_answer(self, task_input, language):
         trace = dissect_problem(self._trace)
@@ -57,6 +59,13 @@ class NetworkTraceProblem(Problem):
         feedbacks = {}
         erroneous_fields = set()
         hidden_fields = {}
+
+        packet_order = task_input.pop(self._problemid, [])
+        order_is_correct = True
+        for i in range(len(trace)):
+            if int(packet_order[i]) != i:
+                order_is_correct = False
+                break
 
         for k in task_input:
             if not k.startswith('@') and k.startswith(self._problemid):
@@ -71,9 +80,12 @@ class NetworkTraceProblem(Problem):
 
         packets = {p_idx: all(feedbacks[f] for f in filter(lambda x: x.startswith('{}:{}:'.format(self._problemid, p_idx)), feedbacks.keys())) for p_idx in self._hidden_fields}
 
-        problem_feedback = ('\n'.join(["**{}**: {}".format(f, self._field_feedback[f]) for f in erroneous_fields]))
+        problem_feedback = ('\n'.join(["- **{}**: {}".format(f, self._field_feedback[f]) for f in erroneous_fields])) + '\n'
 
-        return sum(feedbacks.values()) == len(feedbacks), problem_feedback, [json.dumps({'fields': feedbacks, 'packets': packets})], 0
+        if not order_is_correct:
+            problem_feedback += '\n\nThe order of packets is incorrect\n\n'
+
+        return sum(feedbacks.values()) == len(feedbacks) and order_is_correct, problem_feedback, [json.dumps({'fields': feedbacks, 'packets': packets})], 0
 
     @classmethod
     def parse_problem(cls, problem_content):
@@ -123,6 +135,7 @@ class DisplayableNetworkTraceProblem(NetworkTraceProblem, DisplayableProblem):
         return template_helper.get_custom_renderer(os.path.join(os.path.dirname(__file__), 'templates'), False)
 
     def show_input(self, template_helper, language, seed):
+        rand = Random("{}#{}#{}".format(self.get_task().get_id(), self.get_id(), seed))
         try:
             trace = dissect_problem(self._trace)
             trace = hide(trace, self._hidden_fields)
@@ -131,8 +144,14 @@ class DisplayableNetworkTraceProblem(NetworkTraceProblem, DisplayableProblem):
             trace = None
         stream = []
         for i, p in enumerate(self._trace):
-            stream.append((len(p), get_summary(trace[i][1]), 'incomplete' if i in self._hidden_fields else 'complete'))
-        return str(DisplayableNetworkTraceProblem.get_renderer(template_helper).network_trace(self.get_id(), ParsableText.rst(self._header), trace, stream, type=type, tuple=tuple))
+            stream.append((i, len(p), get_summary(trace[i][1]), 'incomplete' if i in self._hidden_fields else 'complete'))
+        trace = list(enumerate(trace))
+        if self._shuffle:
+            s = rand.getstate()
+            rand.shuffle(stream)
+            rand.setstate(s)
+            rand.shuffle(trace)
+        return str(DisplayableNetworkTraceProblem.get_renderer(template_helper).network_trace(self.get_id(), ParsableText.rst(self._header), trace, stream, self._shuffle, type=type, tuple=tuple))
 
     @classmethod
     def show_editbox(cls, template_helper, key):
