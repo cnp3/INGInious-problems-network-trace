@@ -1236,6 +1236,9 @@ TCP:
       length: 16
   - Options:
       parse: TCP Option
+      conditions:
+        - Data Offset:
+            neq: 5
   - Data:
       parse: HTTP/2 Frame
       fallback:
