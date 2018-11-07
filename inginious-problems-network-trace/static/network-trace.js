@@ -9,6 +9,10 @@ window['studio_init_template_network-trace'] = function (well, pid, problem) {
         $('#pcap-' + pid, well).val(problem['pcap']);
     if ('range' in problem)
         $('#range-' + pid, well).val(problem['range']);
+    if ('shuffle' in problem && problem['shuffle'])
+        $('#shuffle-' + pid, well).attr('checked', '');
+    if ('shuffle-feedback' in problem)
+        $('#shuffle-feedback-' + pid, well).val(problem['shuffle-feedback']);
 };
 window['load_input_network-trace'] = function (submissionid, key, input) {
     const table = $('#table-' + key).find('tbody');
