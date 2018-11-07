@@ -1,4 +1,4 @@
-$def with (id, header, trace, stream, type, tuple)
+$def with (id, header, trace, stream, shuffle, type, tuple)
 
 $code:
     def decode(hex_byte):
@@ -7,21 +7,21 @@ $code:
         c = chr(int('0x' + str(hex_byte), base=16))
         return c if c.isprintable() else '.'
 
-    def print_struct(d, p_number):
+    def print_struct(d, p_number, p_index):
         ret = ''
         for name, value, s_idx, e_idx in d:
             nested = ''
             if type(value) is not tuple:
                 if value == '??':
-                    value = '<input type="text" name="{id}:{pn}:{n}"> <span class="feedback" data-field="{id}:{pn}:{n}"></span>'.format(id=id, pn=p_number, n=name)
+                    value = '<input type="text" name="{id}:{pn}:{n}"> <span class="feedback" data-field="{id}:{pn}:{n}"></span>'.format(id=id, pn=p_index, n=name)
                 nested += '{}: {}'.format(name, value)
             else:
-                nested += '{}: {}<ul data-start-offset="{}" data-end-offset="{}">{}</ul>'.format(name, value[0], s_idx, e_idx, print_struct(value[1], p_number))
+                nested += '{}: {}<ul data-start-offset="{}" data-end-offset="{}">{}</ul>'.format(name, value[0], s_idx, e_idx, print_struct(value[1], p_number, p_index))
 
             ret += '<li data-start-offset="{}" data-end-offset="{}">{}</li>'.format(s_idx, e_idx, nested)
         return ret
 
-    def print_dissection(p_number, p):
+    def print_dissection(p_number, p, p_index):
         data, dissection = p
         size = 2 * 8
         ret = '<div class="row packet packet-{}"><div class="col-lg-7 hex-view">'.format(p_number)
@@ -46,7 +46,7 @@ $code:
             ret += '<br>'
 
         ret += '</div><div class="col-lg-5 structure" style="word-wrap: break-word;">'
-        ret += '<ul>{}</ul>'.format(print_struct(dissection, p_number))
+        ret += '<ul>{}</ul>'.format(print_struct(dissection, p_number, p_index))
         return ret + '</div></div>'
 
 $:header
@@ -60,18 +60,19 @@ $:header
     </tr>
     </thead>
     <tbody>
-        $for length, resume, status in stream:
+        $for index, length, resume, status in stream:
             <tr data-packet-number="$loop.index0">
+                <input type="hidden" name="$id" value="$index">
                 <td>$loop.index0</td>
                 <td>$length bytes</td>
                 <td><code>$resume</code></td>
-                <td class="packet-status">$:('&nbsp;<i class="fa fa-exclamation-triangle"></i>' if status == 'incomplete' else '')<span class="packet-status" data-packet-number="$loop.index0"></span></td>
+                <td class="packet-status">$:('&nbsp;<i class="fa fa-exclamation-triangle"></i>' if status == 'incomplete' else '')<span class="packet-status" data-packet-number="$index"></span></td>
             </tr>
     </tbody>
 </table>
 <hr />
-$for p in trace:
-    $:print_dissection(loop.index0, p)
+$for i, p in trace:
+    $:print_dissection(loop.index0, p, i)
 
 <script>
     $$(window).ready(function () {
@@ -108,11 +109,12 @@ $for p in trace:
             $$('.packet-' + packet_number).addClass('shown').show();
         });
 
-        const table = $$('#table-$id').DataTable({stateSave: true, searching: false, rowReorder:  {
-            selector: 'td:nth-child(1)',
-            update: false,
-            dataSrc: 1,
-        }, ordering: false, paging: false, info: false, scrollY: '306px', scrollCollapse: true});
+        const tableConfig = {stateSave: true, searching: false, rowReorder: false, ordering: false, paging: false, info: false, scrollY: '306px', scrollCollapse: true};
+
+        $if shuffle:
+            tableConfig['rowReorder'] = {selector: 'td:nth-child(2)', update: false, dataSrc: 1};
+
+        const table = $$('#table-$id').DataTable(tableConfig);
         table.on('row-reordered', function (e, diff, edit) {
             console.log(edit);
             if (diff.length >= 2) {
