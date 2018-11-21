@@ -6,7 +6,7 @@ top:
   - UDP
   - Header Hop-by-Hop
   - Header Routing
-  - Header Fragment
+  - Fragment Header
   - Header Destination
   - ICMPv6 Destination Unreachable
   - ICMPv6 Packet Too Big
@@ -46,7 +46,7 @@ IPv6:
               6: TCP
               17: UDP
               43: Header Routing
-              44: Header Fragment
+              44: Fragment Header
               58: ICMPv6
               60: Header Destination
   - Hop Limit:
@@ -73,7 +73,7 @@ Header Hop-by-Hop:
               6: TCP
               17: UDP
               43: Header Routing
-              44: Header Fragment
+              44: Fragment Header
               58: ICMPv6
               60: Header Destination
   - Hdr Ext Len:
@@ -351,7 +351,7 @@ Header Routing:
               6: TCP
               17: UDP
               43: Header Routing
-              44: Header Fragment
+              44: Fragment Header
               58: ICMPv6
               60: Header Destination
   - Hdr Ext Len:
@@ -622,20 +622,37 @@ Header Routing:
   - Type-specific Data:
       length: 0
   - next: TLV-Header
-Header Fragment:
+Fragment Header:
   - type: Header
   - Next Header:
       length: 8
+      triggers:
+        - Data Fragment:
+            parse:
+              0: Header Hop-by-Hop
+              4: IPv6
+              6: TCP
+              17: UDP
+              43: Header Routing
+              44: Fragment Header
+              58: ICMPv6
+              60: Header Destination
   - Reserved:
       length: 8
-  - Fragment Offset:
-      length: 13
+  - Fragment Offset LB:
+      length: 8
+  - Fragment Offset UB:
+      length: 5
   - Res:
       length: 2
   - M flag:
       length: 1
   - Identification:
       length: 32
+  - Data Fragment:
+      fallback:
+        length: '*'
+        format: bytes
 Header Destination:
   - type: Header
   - Next Header:
@@ -648,7 +665,7 @@ Header Destination:
               6: TCP
               17: UDP
               43: Header Routing
-              44: Header Fragment
+              44: Fragment Header
               58: ICMPv6
               60: Header Destination
   - Hdr Ext Len:
