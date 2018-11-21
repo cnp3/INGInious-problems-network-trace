@@ -31,8 +31,14 @@ def main():
     with open(sys.argv[1], 'rb') as f:
         pcap = dpkt.pcap.Reader(f)
         for _, buf in pcap:
-            struct = dpkt.ethernet.Ethernet(buf)
-            if struct.type not in (ETH_TYPE_IP, ETH_TYPE_IP6):  # This may not be an Ethernet frame
+            try:
+                struct = dpkt.ethernet.Ethernet(buf)
+                s_type = struct.type
+            except dpkt.dpkt.Error:
+                struct = dpkt.sll.SLL(buf)
+                s_type = struct.ethtype
+
+            if s_type not in (ETH_TYPE_IP, ETH_TYPE_IP6):  # This may not be an Ethernet frame
                 if (buf[0] & 0xF0) >> 4 is 4:
                     struct = dpkt.ip.IP(buf)
                 elif (buf[0] & 0xF0) >> 4 is 6:
