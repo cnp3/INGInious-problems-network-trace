@@ -1,20 +1,21 @@
-import json
 import os
-import traceback
 from copy import deepcopy
-import itertools
 from random import Random
 
-import dpkt
 import web
-from dpkt.ethernet import ETH_TYPE_IP, ETH_TYPE_IP6
-from inginious.frontend.parsable_text import ParsableText
-from yaml import load
 from inginious.common.tasks_problems import Problem
+from inginious.frontend.parsable_text import ParsableText
 from inginious.frontend.task_problems import DisplayableProblem
 from quic_tracker.dissector import parse_packet_with
+from yaml import load as yload, SafeLoader
+
+from parse_tshark import parse_trace
 
 _dir_path = os.path.dirname(os.path.abspath(__file__))
+
+
+def load(stream):
+    return yload(stream, Loader=SafeLoader)
 
 
 class StaticMockPage(object):
@@ -36,8 +37,9 @@ class NetworkTraceProblem(Problem):
     def __init__(self, task, problemid, content, translations=None):
         self._problemid = problemid
         self._task = task
-        self._trace = transform_pcap(task, content.get('pcap', ''), content.get('range', 'network'))
+        self._trace = load_trace(task, content.get('trace', ''), content.get('exclude', None))
         self._hidden_fields = content.get('hide', {})  # The fields to be hidden
+        self._redacted_fields = content.get('redact', {})
         self._field_feedback = content.get('feedback', {})
         self._header = content.get('header', '')
         self._shuffle = content.get('shuffle', False)
@@ -55,7 +57,7 @@ class NetworkTraceProblem(Problem):
         return list
 
     def check_answer(self, task_input, language):
-        trace = dissect_problem(self._trace)
+        trace = self._trace
 
         feedbacks = {}
         erroneous_fields = set()
@@ -81,16 +83,24 @@ class NetworkTraceProblem(Problem):
 
         packets = {p_idx: all(feedbacks[f] for f in filter(lambda x: x.startswith('{}:{}:'.format(self._problemid, p_idx)), feedbacks.keys())) for p_idx in self._hidden_fields}
 
-        problem_feedback = ('\n'.join(["- **{}**: {}".format(f, self._field_feedback[f]) for f in erroneous_fields])) + '\n'
+        problem_feedback = ('\n'.join(["- **{}**: {}".format(f, self._field_feedback[f]) for f in erroneous_fields if f in self._field_feedback])) + '\n'
 
         if not order_is_correct:
             problem_feedback += '\n\n{}\n\n'.format(self._shuffle_feedback)
 
-        return sum(feedbacks.values()) == len(feedbacks) and order_is_correct, problem_feedback, [json.dumps({'fields': feedbacks, 'packets': packets})], 0
+        return sum(feedbacks.values()) == len(feedbacks) and order_is_correct, problem_feedback, {'fields': feedbacks, 'packets': packets}, 0
 
     @classmethod
     def parse_problem(cls, problem_content):
         problem_content = Problem.parse_problem(problem_content)
+        try:
+            problem_content['exclude'] = load(problem_content['exclude']) or {}
+        except ValueError as e:
+            raise ValueError('Exclude fields does not contain valid YAML: %s' % e)
+        try:
+            problem_content['redact'] = load(problem_content['redact']) or {}
+        except ValueError as e:
+            raise ValueError('Redacted fields does not contain valid YAML: %s' % e)
         try:
             problem_content['hide'] = load(problem_content['hide']) or {}
         except ValueError as e:
@@ -111,6 +121,10 @@ class NetworkTraceProblem(Problem):
     @classmethod
     def get_text_fields(cls):
         return {'name': True}
+
+    @classmethod
+    def prepare_feedback(cls, feedback, show_everything, translation):
+        return feedback
 
 
 def is_equal(expected, actual):
@@ -137,16 +151,11 @@ class DisplayableNetworkTraceProblem(NetworkTraceProblem, DisplayableProblem):
 
     def show_input(self, template_helper, language, seed):
         rand = Random("{}#{}#{}".format(self.get_task().get_id(), self.get_id(), seed))
-        try:
-            trace = dissect_problem(self._trace)
-            trace = hide(trace, self._hidden_fields)
-        except Exception as e:
-            traceback.print_exc()
-            trace = None
         stream = []
-        for i, p in enumerate(self._trace):
-            stream.append((i, len(p), get_summary(trace[i][1]), 'incomplete' if i in self._hidden_fields else 'complete'))
-        trace = list(enumerate(trace))
+        trace = [(split_every_n(data.hex()), dissection) for data, dissection in self._trace]
+        trace = list(enumerate(hide(redact(trace, self._redacted_fields), self._hidden_fields)))
+        for i, p in trace:
+            stream.append((i, len(p[0]), get_summary(p[1]), 'incomplete' if i in self._hidden_fields else 'complete'))
         if self._shuffle:
             s = rand.getstate()
             rand.shuffle(stream)
@@ -165,6 +174,23 @@ class DisplayableNetworkTraceProblem(NetworkTraceProblem, DisplayableProblem):
 
 def split_every_n(string, n=2):
     return [''.join(x) for x in zip(*[iter(string)]*n)]
+
+
+def load_trace(task, filename, excluded=None):
+    fs = task.get_fs()
+    if not fs.exists(filename) or not fs:
+        return []
+    try:
+        f = fs.get_fd(filename)
+        trace = parse_trace(f.read(), excluded=excluded)
+        f.close()
+        return trace
+    except IOError:
+        return []
+
+
+def get_summary(packet):
+    return packet[-1][0]['showname']
 
 
 def dissect_problem(trace):
@@ -186,107 +212,42 @@ def hide(trace, hidden_fields):
             fields = []
             for h in hidden_fields[i]:
                 trace[i] = (data, [hide_field(d, h, fields) for d in trace[i][1]])
-            for f in fields:
-                for j in range(f[2], f[3]):
+            for _, _, lo, hi in fields:
+                for j in range(lo, hi):
                     data[j] = '??'
     return trace
 
 
-def hide_field(dissection, field_name, hidden_fields):
-    if dissection[0] == field_name:
-        hidden_fields.append(dissection)
-        return dissection[0], '??', dissection[2], dissection[3]
-    elif type(dissection[1]) is list:
-        if len(dissection) == 4:
-            return dissection[0], [hide_field(d, field_name, hidden_fields) for d in dissection[1]], dissection[2] , dissection[3]
-        else:  # TODO: This is not specified in the dissector and should be investigated
-            return dissection[0], [hide_field(d, field_name, hidden_fields) for d in dissection[1]]
-    elif type(dissection[1]) is tuple:
-        return dissection[0], hide_field(dissection[1], field_name, hidden_fields), dissection[2], dissection[3]
-    else:
-        return dissection
+def redact(trace, redacted_fields):
+    for i, (data, dissection) in enumerate(trace):
+        for h in redacted_fields:
+            trace[i] = (data, [redact_field(d, h) for d in trace[i][1]])
+    return trace
 
 
-def get_summary(dissection):
-    summary_fields = {'TCP': {'NS': 'flag', 'CWR': 'flag', 'ECE': 'flag', 'URG': 'flag', 'ACK': 'flag', 'PSH': 'flag', 'RST': 'flag', 'SYN': 'flag', 'FIN': 'flag', 'Sequence Number': {'name': 'SEQ'}, 'Acknowledgment Number': {'name': 'ACK'}, 'Options': {'Maximum Segment Size': 'MSS', 'Sack-Permitted Option': 'SACK_PERM', 'Timestamps Option': 'TS', 'Window Scale Option': 'WSO', 'No-Operation': None}}}
-    base_format = '<{name}: {details}>'
+def hide_field(d, to_hide, hidden_fields):
+    field, embedded_fields = d
+    if field.get('name') == to_hide:
+        field['showname'] = field['showname'].replace(field['show'], '?')
+        if '=' in field['showname'] and ':' in field['showname']:
+            idx = field['showname'].rindex(':')
+            field['showname'] = field['showname'][:idx].replace('0', '?').replace('1', '?') + ': ?'
+        field['hidden'] = True
+        hidden_fields.append((field['name'], field['show'], int(field['pos']), int(field['pos']) + int(field['size'])))
 
-    struct_name = dissection[0][0] if type(dissection[0][1]) is not tuple or dissection[0][1][0] == '' else dissection[0][1][0]
-    fields = summary_fields.get(struct_name, [])
-    flags = []
-    values = []
-    options = []
-    for f, v, _, _ in dissection[0][1][1]:
-        if f in fields:
-            if fields[f] == 'flag':
-                if v == 1:
-                    flags.append(f)
-            elif len(fields[f]) == 1:
-                values.append((fields[f]['name'], v))
-            elif fields[f].get(v[0], v[0]) is not None:
-                options.append(fields[f].get(v[0], v[0]))
-
-    if not flags and not values:
-        for f in dissection[0][1][1]:
-            try:
-                return get_summary([f])
-            except:
-                pass
-
-    return base_format.format(name=struct_name, details=', '.join(itertools.chain(flags, ('{}: {}'.format(n, v) for n, v in values), options)))
+    return field, [hide_field(embedded_field, to_hide, hidden_fields) for embedded_field in embedded_fields]
 
 
-def transform_pcap(task, filename, level_range):
-    _levels = {
-        'network': 0,
-        'transport': 1,
-        'application': 2
-    }
-    levels = [_levels[s] for s in level_range.split('-')]
-    output = []
+def redact_field(d, to_redact):
+    field, embedded_fields = d
+    if field.get('name') == to_redact:
+        field['showname'] = field['showname'].replace(field['show'], '')
+        if ':' in field['showname']:
+            idx = field['showname'].rindex(':')
+            field['showname'] = field['showname'][:idx]
+        field['redacted'] = True
 
-    fs = task.get_fs()
-    if not fs.exists(filename) or not fs:
-        return []
-    try:
-        f = fs.get_fd(filename)
-    except IOError:
-        return []
-    pcap = dpkt.pcap.Reader(f)
-    for _, buf in pcap:
-        try:
-            struct = dpkt.ethernet.Ethernet(buf)
-            s_type = struct.type
-        except dpkt.dpkt.Error:
-            struct = dpkt.sll.SLL(buf)
-            s_type = struct.ethtype
-
-        if s_type not in (ETH_TYPE_IP, ETH_TYPE_IP6):  # This may not be an Ethernet frame
-            if (buf[0] & 0xF0) >> 4 is 4:
-                struct = dpkt.ip.IP(buf)
-            elif (buf[0] & 0xF0) >> 4 is 6:
-                struct = dpkt.ip.IP6(buf)
-            else:
-                break
-            buf = b''.join(struct.pack().rsplit(bytes(struct.data))) if type(struct) is not bytes and struct.data else bytes(struct)
-            level = 1
-        else:
-            buf = b''
-            level = 0
-
-        while level <= levels[-1]:
-            struct = struct.data
-            if level >= levels[0]:
-                buf += b''.join(struct.pack().rsplit(bytes(struct.data))) if type(struct) is not bytes and struct.data else bytes(struct)
-            elif level == levels[-1]:
-                buf += struct.pack()
-            level += 1
-
-        if buf:
-            output.append(buf)
-    f.close()
-
-    return output
+    return field, [redact_field(embedded_field, to_redact) for embedded_field in embedded_fields]
 
 
 def init(plugin_manager, course_factory, client, plugin_config):
