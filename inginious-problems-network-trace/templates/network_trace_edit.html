@@ -7,25 +7,39 @@ $def with (key)
     </div>
 </div>
 <div class="form-group row">
-    <label for="pcap-PID" class="col-sm-2 control-label">Trace file (.pcap only)</label>
+    <label for="trace-PID" class="col-sm-2 control-label">Tshark PDML (.xml)</label>
     <div class="col-sm-10">
-        <input type="text" id="pcap-PID" class="form-control" name="problem[PID][pcap]"/>
+        <input type="text" id="trace-PID" class="form-control" name="problem[PID][trace]"/>
     </div>
 </div>
 <div class="form-group row">
-    <label for="range-PID" class="col-sm-2 control-label">Network layers</label>
+    <label for="exclude-PID" class="col-sm-2 control-label" data-toggle="tooltip" title="List all the field names that should be completely excluded from all packets.">
+        Exclude fields <i class="fa fa-question-circle"></i>
+    </label>
     <div class="col-sm-10">
-        <input type="text" id="range-PID" class="form-control" name="problem[PID][range]" placeholder="network, transport, application or a combination such as network-transport"/>
+        <textarea id="exclude-PID" class="form-control" name="problem[PID][exclude]"></textarea>
     </div>
 </div>
 <div class="form-group row">
-    <label for="hide-PID" class="col-sm-2 control-label">Hide fields</label>
+    <label for="redact-PID" class="col-sm-2 control-label" data-toggle="tooltip" title="List all the field names for which their description should be redacted.">
+        Redact fields <i class="fa fa-question-circle"></i>
+    </label>
+    <div class="col-sm-10">
+        <textarea id="redact-PID" class="form-control" name="problem[PID][redact]"></textarea>
+    </div>
+</div>
+<div class="form-group row">
+    <label for="hide-PID" class="col-sm-2 control-label" data-toggle="tooltip" title="List all the fields names that should be hidden and completed by students for each packets.">
+        Hide fields <i class="fa fa-question-circle"></i>
+    </label>
     <div class="col-sm-10">
         <textarea id="hide-PID" class="form-control" name="problem[PID][hide]"></textarea>
     </div>
 </div>
 <div class="form-group row">
-    <label for="feedback-PID" class="col-sm-2 control-label">Feedback</label>
+    <label for="feedback-PID" class="col-sm-2 control-label" data-toggle="tooltip" title="For each hidden field, set the feedback that will be displayed for erroneous values.">
+        Feedback for hidden fields <i class="fa fa-question-circle"></i>
+    </label>
     <div class="col-sm-10">
         <textarea id="feedback-PID" class="form-control" name="problem[PID][feedback]"></textarea>
     </div>
