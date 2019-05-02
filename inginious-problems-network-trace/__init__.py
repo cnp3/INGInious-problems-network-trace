@@ -79,11 +79,11 @@ class NetworkTraceProblem(Problem):
                 hf = next(filter(lambda x: x[0] == field, hidden_fields[p_idx]))
                 feedbacks[k] = is_equal(hf[1], task_input[k])
                 if not feedbacks[k]:
-                    erroneous_fields.add(field)
+                    erroneous_fields.add((hf[0], hf[4]))
 
         packets = {p_idx: all(feedbacks[f] for f in filter(lambda x: x.startswith('{}:{}:'.format(self._problemid, p_idx)), feedbacks.keys())) for p_idx in self._hidden_fields}
 
-        problem_feedback = ('\n'.join(["- **{}**: {}".format(f, self._field_feedback[f]) for f in erroneous_fields if f in self._field_feedback])) + '\n'
+        problem_feedback = ('\n'.join(["- **{}**: {}".format(n, self._field_feedback[f]) for f, n in erroneous_fields if f in self._field_feedback])) + '\n'
 
         if not order_is_correct:
             problem_feedback += '\n\n{}\n\n'.format(self._shuffle_feedback)
@@ -212,7 +212,7 @@ def hide(trace, hidden_fields):
             fields = []
             for h in hidden_fields[i]:
                 trace[i] = (data, [hide_field(d, h, fields) for d in trace[i][1]])
-            for _, _, lo, hi in fields:
+            for _, _, lo, hi, *_ in fields:
                 for j in range(lo, hi):
                     data[j] = '??'
     return trace
@@ -225,6 +225,14 @@ def redact(trace, redacted_fields):
     return trace
 
 
+def extract_field_name_from(showname):
+    if '=' in showname:
+        showname = showname[showname.index('=')+1:]
+    if ':' in showname:
+        showname = showname[:showname.rindex(':')]
+    return showname.strip()
+
+
 def hide_field(d, to_hide, hidden_fields):
     field, embedded_fields = d
     if field.get('name') == to_hide:
@@ -233,7 +241,7 @@ def hide_field(d, to_hide, hidden_fields):
             idx = field['showname'].rindex(':')
             field['showname'] = field['showname'][:idx].replace('0', '?').replace('1', '?') + ': ?'
         field['hidden'] = True
-        hidden_fields.append((field['name'], field['show'], int(field['pos']), int(field['pos']) + int(field['size'])))
+        hidden_fields.append((field['name'], field['show'], int(field['pos']), int(field['pos']) + int(field['size']), extract_field_name_from(field['showname'])))
 
     return field, [hide_field(embedded_field, to_hide, hidden_fields) for embedded_field in embedded_fields]
 
