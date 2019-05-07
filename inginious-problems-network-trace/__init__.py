@@ -9,7 +9,7 @@ from inginious.frontend.task_problems import DisplayableProblem
 from quic_tracker.dissector import parse_packet_with
 from yaml import load as yload, SafeLoader
 
-from parse_tshark import parse_trace
+from .parse_tshark import parse_trace
 
 _dir_path = os.path.dirname(os.path.abspath(__file__))
 
