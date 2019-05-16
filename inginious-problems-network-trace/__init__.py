@@ -237,7 +237,7 @@ def extract_field_name_from(showname):
 def hide_field(d, to_hide, hidden_fields):
     field, embedded_fields = d
     if field.get('name') == to_hide:
-        field['showname'] = field['showname'].replace(field['show'], '?')
+        field['showname'] = field['showname'].replace(field['show'] if not field['show'].startswith('0x') else hex(int(field['show'], base=16)), '?')
         if '=' in field['showname'] and ':' in field['showname']:
             idx = field['showname'].rindex(':')
             field['showname'] = field['showname'][:idx].replace('0', '?').replace('1', '?') + ': ?'
@@ -250,7 +250,7 @@ def hide_field(d, to_hide, hidden_fields):
 def redact_field(d, to_redact):
     field, embedded_fields = d
     if field.get('name') == to_redact:
-        field['showname'] = field['showname'].replace(field['show'], '')
+        field['showname'] = field['showname'].replace(field['show'] if not field['show'].startswith('0x') else hex(int(field['show'], base=16)), '')
         if ':' in field['showname']:
             idx = field['showname'].rindex(':')
             field['showname'] = field['showname'][:idx]
