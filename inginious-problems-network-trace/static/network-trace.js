@@ -35,7 +35,10 @@ window['load_input_network-trace'] = function (submissionid, key, input) {
     }
 };
 window['load_feedback_network-trace'] = function (problemid, content) {
-    const feedback = jQuery.parseJSON($('<div>').html(content[1]).text());
+    var feedback = jQuery.parseJSON($('<div>').html(content[1]).text());
+    if (Array.isArray(feedback)) {
+        feedback = jQuery.parseJSON(feedback[0]);
+    }
     const fields = feedback.fields;
     const packets = feedback.packets;
 
