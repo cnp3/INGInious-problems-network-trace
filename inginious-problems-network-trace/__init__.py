@@ -7,7 +7,6 @@ import web
 from inginious.common.tasks_problems import Problem
 from inginious.frontend.parsable_text import ParsableText
 from inginious.frontend.task_problems import DisplayableProblem
-from quic_tracker.dissector import parse_packet_with
 from yaml import load as yload, SafeLoader
 
 from .parse_tshark import parse_trace
@@ -77,10 +76,13 @@ class NetworkTraceProblem(Problem):
                 p_idx = int(p_idx)
                 if p_idx not in hidden_fields:
                     hidden_fields[p_idx] = get_hidden_fields(trace[p_idx], self._hidden_fields[p_idx])
-                hf = next(filter(lambda x: x[0] == field, hidden_fields[p_idx]))
-                feedbacks[k] = is_equal(hf[1], task_input[k])
-                if not feedbacks[k]:
-                    erroneous_fields.add((hf[0], hf[4]))
+                try:
+                    hf = next(filter(lambda x: x[0] == field, hidden_fields[p_idx]))
+                    feedbacks[k] = is_equal(hf[1], task_input[k])
+                    if not feedbacks[k]:
+                        erroneous_fields.add((hf[0], hf[4]))
+                except StopIteration:
+                    pass
 
         packets = {p_idx: all(feedbacks[f] for f in filter(lambda x: x.startswith('{}:{}:'.format(self._problemid, p_idx)), feedbacks.keys())) for p_idx in self._hidden_fields}
 
@@ -192,12 +194,6 @@ def load_trace(task, filename, excluded=None):
 
 def get_summary(packet):
     return packet[-1][0]['showname']
-
-
-def dissect_problem(trace):
-    with open(os.path.join(_dir_path, 'protocols', 'all.yaml')) as f:
-        protocols = load(f)
-    return [(split_every_n(bytearray(p).hex()), parse_packet_with(bytearray(p), deepcopy(protocols), context={})) for p in trace]
 
 
 def get_hidden_fields(packet, hidden_fields):
