@@ -77,10 +77,13 @@ class NetworkTraceProblem(Problem):
                 p_idx = int(p_idx)
                 if p_idx not in hidden_fields:
                     hidden_fields[p_idx] = get_hidden_fields(trace[p_idx], self._hidden_fields[p_idx])
-                hf = next(filter(lambda x: x[0] == field, hidden_fields[p_idx]))
-                feedbacks[k] = is_equal(hf[1], task_input[k])
-                if not feedbacks[k]:
-                    erroneous_fields.add((hf[0], hf[4]))
+                try:
+                    hf = next(filter(lambda x: x[0] == field, hidden_fields[p_idx]))
+                    feedbacks[k] = is_equal(hf[1], task_input[k])
+                    if not feedbacks[k]:
+                        erroneous_fields.add((hf[0], hf[4]))
+                except StopIteration:
+                    pass
 
         packets = {p_idx: all(feedbacks[f] for f in filter(lambda x: x.startswith('{}:{}:'.format(self._problemid, p_idx)), feedbacks.keys())) for p_idx in self._hidden_fields}
 
