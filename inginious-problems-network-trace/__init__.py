@@ -7,7 +7,6 @@ import web
 from inginious.common.tasks_problems import Problem
 from inginious.frontend.parsable_text import ParsableText
 from inginious.frontend.task_problems import DisplayableProblem
-from quic_tracker.dissector import parse_packet_with
 from yaml import load as yload, SafeLoader
 
 from .parse_tshark import parse_trace
@@ -195,12 +194,6 @@ def load_trace(task, filename, excluded=None):
 
 def get_summary(packet):
     return packet[-1][0]['showname']
-
-
-def dissect_problem(trace):
-    with open(os.path.join(_dir_path, 'protocols', 'all.yaml')) as f:
-        protocols = load(f)
-    return [(split_every_n(bytearray(p).hex()), parse_packet_with(bytearray(p), deepcopy(protocols), context={})) for p in trace]
 
 
 def get_hidden_fields(packet, hidden_fields):
