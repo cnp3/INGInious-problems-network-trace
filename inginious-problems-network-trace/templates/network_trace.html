@@ -1,4 +1,4 @@
-$def with (id, header, trace, stream, shuffle, type, tuple)
+$def with (id, header, trace, stream, shuffle, type, tuple, print)
 
 $code:
     def decode(hex_byte):
@@ -12,7 +12,7 @@ $code:
         for field, nested_fields in d:
             s_idx = int(field['pos'])
             e_idx = s_idx + int(field['size'])
-            nested  = field['showname']
+            nested  = field.get('showname', field.get('show'))
             if field.get('hidden'):
                 nested += ' <input type="text" name="{id}:{pn}:{n}"> <span class="feedback" data-field="{id}:{pn}:{n}"></span>'.format(id=id, pn=p_index, n=field['name'])
             else:
