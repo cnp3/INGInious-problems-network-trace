@@ -34,7 +34,7 @@ class StaticMockPage(object):
 
 
 class NetworkTraceProblem(Problem):
-    def __init__(self, task, problemid, content, translations=None):
+    def __init__(self, task, problemid, content):
         self._problemid = problemid
         self._task = task
         self._trace = load_trace(task, content.get('trace', ''), content.get('exclude', None))
@@ -44,7 +44,7 @@ class NetworkTraceProblem(Problem):
         self._header = content.get('header', '')
         self._shuffle = content.get('shuffle', False)
         self._shuffle_feedback = (content.get('shuffle-feedback') or '').strip() or 'The order of packets is incorrect'
-        Problem.__init__(self, task, problemid, content, translations)
+        Problem.__init__(self, task, problemid, content)
 
     @classmethod
     def get_type(cls):
@@ -140,8 +140,8 @@ def is_equal(expected, actual):
 
 
 class DisplayableNetworkTraceProblem(NetworkTraceProblem, DisplayableProblem):
-    def __init__(self, task, problemid, content, translations=None):
-        NetworkTraceProblem.__init__(self, task, problemid, content, translations)
+    def __init__(self, task, problemid, content):
+        NetworkTraceProblem.__init__(self, task, problemid, content)
 
     @classmethod
     def get_type_name(self, gettext):
