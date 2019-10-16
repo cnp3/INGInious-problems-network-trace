@@ -1,4 +1,4 @@
-$def with (id, header, trace, stream, shuffle, type, tuple, print)
+$def with (id, header, trace, stream, shuffle, type, tuple, gettext)
 
 $code:
     def decode(hex_byte):
@@ -54,9 +54,9 @@ $:header
     <thead>
     <tr>
         <th>#</th>
-        <th>Length</th>
-        <th>Summary</th>
-        <th>Status</th>
+        <th>$:gettext('Length')</th>
+        <th>$:gettext('Summary')</th>
+        <th>$:gettext('Status')</th>
     </tr>
     </thead>
     <tbody>
@@ -64,7 +64,7 @@ $:header
             <tr data-packet-number="$loop.index0">
                 <input type="hidden" name="$id" value="$index">
                 <td>$loop.index0</td>
-                <td>$length bytes</td>
+                <td>$length $:gettext('bytes')</td>
                 <td><code>$resume</code></td>
                 <td class="packet-status">$:('&nbsp;<i class="fa fa-exclamation-triangle"></i>' if status == 'incomplete' else '')<span class="packet-status" data-packet-number="$index"></span></td>
             </tr>
