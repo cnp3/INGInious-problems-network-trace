@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2019-10-16 13:34+0200\n"
+"POT-Creation-Date: 2019-10-17 11:04+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -35,5 +35,61 @@ msgstr ""
 
 #: inginious-problems-network-trace/templates/network_trace.html:67
 msgid "bytes"
+msgstr ""
+
+#: inginious-problems-network-trace/templates/network_trace_edit.html:4
+msgid "Context"
+msgstr ""
+
+#: inginious-problems-network-trace/templates/network_trace_edit.html:10
+msgid "Tshark PDML (.xml)"
+msgstr ""
+
+#: inginious-problems-network-trace/templates/network_trace_edit.html:16
+msgid ""
+"\"List all the field names that should be completely excluded from all "
+"packets.\""
+msgstr ""
+
+#: inginious-problems-network-trace/templates/network_trace_edit.html:17
+msgid "Exclude fields"
+msgstr ""
+
+#: inginious-problems-network-trace/templates/network_trace_edit.html:24
+msgid ""
+"\"List all the field names for which their description should be "
+"redacted.\""
+msgstr ""
+
+#: inginious-problems-network-trace/templates/network_trace_edit.html:25
+msgid "Redact fields"
+msgstr ""
+
+#: inginious-problems-network-trace/templates/network_trace_edit.html:32
+msgid ""
+"\"List all the fields names that should be hidden and completed by "
+"students for each packets.\""
+msgstr ""
+
+#: inginious-problems-network-trace/templates/network_trace_edit.html:33
+msgid "Hide fields"
+msgstr ""
+
+#: inginious-problems-network-trace/templates/network_trace_edit.html:40
+msgid ""
+"\"For each hidden field, set the feedback that will be displayed for "
+"erroneous values.\""
+msgstr ""
+
+#: inginious-problems-network-trace/templates/network_trace_edit.html:41
+msgid "Feedback for hidden fields"
+msgstr ""
+
+#: inginious-problems-network-trace/templates/network_trace_edit.html:48
+msgid "Shuffle packets"
+msgstr ""
+
+#: inginious-problems-network-trace/templates/network_trace_edit.html:54
+msgid "Shuffle feedback"
 msgstr ""
 

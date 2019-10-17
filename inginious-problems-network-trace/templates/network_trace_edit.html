@@ -1,57 +1,57 @@
-$def with (key)
+$def with (key, gettext)
 
 <div class="form-group row">
-    <label for="header-PID" class="col-sm-2 control-label">Context</label>
+    <label for="header-PID" class="col-sm-2 control-label">$:gettext("Context")</label>
     <div class="col-sm-10">
         <textarea id="header-PID" class="form-control" name="problem[PID][header]"></textarea>
     </div>
 </div>
 <div class="form-group row">
-    <label for="trace-PID" class="col-sm-2 control-label">Tshark PDML (.xml)</label>
+    <label for="trace-PID" class="col-sm-2 control-label">$:gettext("Tshark PDML (.xml)")</label>
     <div class="col-sm-10">
         <input type="text" id="trace-PID" class="form-control" name="problem[PID][trace]"/>
     </div>
 </div>
 <div class="form-group row">
-    <label for="exclude-PID" class="col-sm-2 control-label" data-toggle="tooltip" title="List all the field names that should be completely excluded from all packets.">
-        Exclude fields <i class="fa fa-question-circle"></i>
+    <label for="exclude-PID" class="col-sm-2 control-label" data-toggle="tooltip" title=$:gettext('"List all the field names that should be completely excluded from all packets."')>
+        $:gettext("Exclude fields") <i class="fa fa-question-circle"></i>
     </label>
     <div class="col-sm-10">
         <textarea id="exclude-PID" class="form-control" name="problem[PID][exclude]"></textarea>
     </div>
 </div>
 <div class="form-group row">
-    <label for="redact-PID" class="col-sm-2 control-label" data-toggle="tooltip" title="List all the field names for which their description should be redacted.">
-        Redact fields <i class="fa fa-question-circle"></i>
+    <label for="redact-PID" class="col-sm-2 control-label" data-toggle="tooltip" title=$:gettext('"List all the field names for which their description should be redacted."')>
+        $:gettext("Redact fields") <i class="fa fa-question-circle"></i>
     </label>
     <div class="col-sm-10">
         <textarea id="redact-PID" class="form-control" name="problem[PID][redact]"></textarea>
     </div>
 </div>
 <div class="form-group row">
-    <label for="hide-PID" class="col-sm-2 control-label" data-toggle="tooltip" title="List all the fields names that should be hidden and completed by students for each packets.">
-        Hide fields <i class="fa fa-question-circle"></i>
+    <label for="hide-PID" class="col-sm-2 control-label" data-toggle="tooltip" title=$:gettext('"List all the fields names that should be hidden and completed by students for each packets."')>
+        $:gettext("Hide fields") <i class="fa fa-question-circle"></i>
     </label>
     <div class="col-sm-10">
         <textarea id="hide-PID" class="form-control" name="problem[PID][hide]"></textarea>
     </div>
 </div>
 <div class="form-group row">
-    <label for="feedback-PID" class="col-sm-2 control-label" data-toggle="tooltip" title="For each hidden field, set the feedback that will be displayed for erroneous values.">
-        Feedback for hidden fields <i class="fa fa-question-circle"></i>
+    <label for="feedback-PID" class="col-sm-2 control-label" data-toggle="tooltip" title=$:gettext('"For each hidden field, set the feedback that will be displayed for erroneous values."')>
+        $:gettext("Feedback for hidden fields") <i class="fa fa-question-circle"></i>
     </label>
     <div class="col-sm-10">
         <textarea id="feedback-PID" class="form-control" name="problem[PID][feedback]"></textarea>
     </div>
 </div>
 <div class="form-group row">
-    <label for="shuffle-PID" class="col-sm-2 control-label">Shuffle packets</label>
+    <label for="shuffle-PID" class="col-sm-2 control-label">$:gettext("Shuffle packets")</label>
     <div class="col-sm-2">
         <input type="checkbox" id="shuffle-PID" class="form-control" name="problem[PID][shuffle]">
     </div>
 </div>
 <div class="form-group row">
-    <label for="shuffle-feedback-PID" class="col-sm-2 control-label">Shuffle feedback</label>
+    <label for="shuffle-feedback-PID" class="col-sm-2 control-label">$:gettext("Shuffle feedback")</label>
     <div class="col-sm-10">
         <textarea id="shuffle-feedback-PID" class="form-control" name="problem[PID][shuffle-feedback]"></textarea>
     </div>

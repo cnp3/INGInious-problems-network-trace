@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2019-10-16 13:34+0200\n"
+"POT-Creation-Date: 2019-10-17 11:04+0200\n"
 "PO-Revision-Date: 2019-10-16 11:25+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: fr\n"
@@ -37,4 +37,64 @@ msgstr "État"
 #: inginious-problems-network-trace/templates/network_trace.html:67
 msgid "bytes"
 msgstr "octets"
+
+#: inginious-problems-network-trace/templates/network_trace_edit.html:4
+msgid "Context"
+msgstr "Énoncé"
+
+#: inginious-problems-network-trace/templates/network_trace_edit.html:10
+msgid "Tshark PDML (.xml)"
+msgstr "Fichier PDML Tshark (.xml)"
+
+#: inginious-problems-network-trace/templates/network_trace_edit.html:16
+msgid ""
+"\"List all the field names that should be completely excluded from all "
+"packets.\""
+msgstr "\"Liste des champs qui doivent être complètement exclus de tous les "
+"paquets.\""
+
+#: inginious-problems-network-trace/templates/network_trace_edit.html:17
+msgid "Exclude fields"
+msgstr "Champs à exclure"
+
+#: inginious-problems-network-trace/templates/network_trace_edit.html:24
+msgid ""
+"\"List all the field names for which their description should be "
+"redacted.\""
+msgstr "\"Liste des champs pour lesquels la description doit être "
+"rédigée.\""
+
+#: inginious-problems-network-trace/templates/network_trace_edit.html:25
+msgid "Redact fields"
+msgstr "Champs à rédiger"
+
+#: inginious-problems-network-trace/templates/network_trace_edit.html:32
+msgid ""
+"\"List all the fields names that should be hidden and completed by "
+"students for each packets.\""
+msgstr "\"Liste des champs qui doivent être masqués et complétés "
+"par les étudiants pour chaque paquet.\""
+
+#: inginious-problems-network-trace/templates/network_trace_edit.html:33
+msgid "Hide fields"
+msgstr "Champs à masquer"
+
+#: inginious-problems-network-trace/templates/network_trace_edit.html:40
+msgid ""
+"\"For each hidden field, set the feedback that will be displayed for "
+"erroneous values.\""
+msgstr "\"Pour chaque champ caché, précisez le message d'évaluation à afficher "
+"pour chaque valeur erronée. \""
+
+#: inginious-problems-network-trace/templates/network_trace_edit.html:41
+msgid "Feedback for hidden fields"
+msgstr "Afficher une évaluation pour les champs cachés"
+
+#: inginious-problems-network-trace/templates/network_trace_edit.html:48
+msgid "Shuffle packets"
+msgstr "Désordonner les paquets"
+
+#: inginious-problems-network-trace/templates/network_trace_edit.html:54
+msgid "Shuffle feedback"
+msgstr "Message d'évaluation en cas de désordre"
 

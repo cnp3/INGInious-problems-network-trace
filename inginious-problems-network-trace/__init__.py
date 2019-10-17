@@ -170,11 +170,12 @@ class DisplayableNetworkTraceProblem(NetworkTraceProblem, DisplayableProblem):
         return str(DisplayableNetworkTraceProblem.get_renderer(template_helper).network_trace(self.get_id(), ParsableText.rst(self.gettext(language, self._header)), trace, stream, self._shuffle, type=type, tuple=tuple, gettext=translation.gettext))
 
     @classmethod
-    def show_editbox(cls, template_helper, key):
-        return DisplayableNetworkTraceProblem.get_renderer(template_helper).network_trace_edit(key)
+    def show_editbox(cls, template_helper, key, language):
+        translation = _translations.get(language, gettext.NullTranslations())
+        return DisplayableNetworkTraceProblem.get_renderer(template_helper).network_trace_edit(key, gettext=translation.gettext)
 
     @classmethod
-    def show_editbox_templates(cls, template_helper, key):
+    def show_editbox_templates(cls, template_helper, key, language):
         return ""
 
 
