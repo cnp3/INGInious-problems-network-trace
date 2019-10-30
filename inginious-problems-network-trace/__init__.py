@@ -203,7 +203,8 @@ def get_summary(packet):
 def get_hidden_fields(packet, hidden_fields):
     fields = []
     for h in hidden_fields:
-        hide_field(packet[1][0], h, fields)
+        for l in packet[1]:
+            hide_field(l, h, fields)
     return fields
 
 
