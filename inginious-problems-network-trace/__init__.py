@@ -1,5 +1,6 @@
 import json
 import os
+import gettext
 from copy import deepcopy
 from random import Random
 
@@ -12,7 +13,7 @@ from yaml import load as yload, SafeLoader
 from .parse_tshark import parse_trace
 
 _dir_path = os.path.dirname(os.path.abspath(__file__))
-
+_translations = None
 
 def load(stream):
     return yload(stream, Loader=SafeLoader)
@@ -34,7 +35,7 @@ class StaticMockPage(object):
 
 
 class NetworkTraceProblem(Problem):
-    def __init__(self, task, problemid, content, translations=None):
+    def __init__(self, task, problemid, content):
         self._problemid = problemid
         self._task = task
         self._trace = load_trace(task, content.get('trace', ''), content.get('exclude', None))
@@ -44,7 +45,7 @@ class NetworkTraceProblem(Problem):
         self._header = content.get('header', '')
         self._shuffle = content.get('shuffle', False)
         self._shuffle_feedback = (content.get('shuffle-feedback') or '').strip() or 'The order of packets is incorrect'
-        Problem.__init__(self, task, problemid, content, translations)
+        Problem.__init__(self, task, problemid, content)
 
     @classmethod
     def get_type(cls):
@@ -86,7 +87,7 @@ class NetworkTraceProblem(Problem):
 
         packets = {p_idx: all(feedbacks[f] for f in filter(lambda x: x.startswith('{}:{}:'.format(self._problemid, p_idx)), feedbacks.keys())) for p_idx in self._hidden_fields}
 
-        problem_feedback = ('\n'.join(["- **{}**: {}".format(n, self._field_feedback[f]) for f, n in erroneous_fields if f in self._field_feedback])) + '\n'
+        problem_feedback = ('\n'.join(["- **{}**: {}".format(n, self.gettext(language, self._field_feedback[f])) for f, n in erroneous_fields if f in self._field_feedback])) + '\n'
 
         if not order_is_correct:
             problem_feedback += '\n\n{}\n\n'.format(self._shuffle_feedback)
@@ -123,7 +124,7 @@ class NetworkTraceProblem(Problem):
 
     @classmethod
     def get_text_fields(cls):
-        return {'name': True}
+        return {'name': True, 'header': True, 'feedback': {}}
 
     @classmethod
     def prepare_feedback(cls, feedback, show_everything, translation):
@@ -140,12 +141,12 @@ def is_equal(expected, actual):
 
 
 class DisplayableNetworkTraceProblem(NetworkTraceProblem, DisplayableProblem):
-    def __init__(self, task, problemid, content, translations=None):
-        NetworkTraceProblem.__init__(self, task, problemid, content, translations)
+    def __init__(self, task, problemid, content):
+        NetworkTraceProblem.__init__(self, task, problemid, content)
 
     @classmethod
-    def get_type_name(self, gettext):
-        return gettext("network-trace")
+    def get_type_name(self, language):
+        return _translations.get(language, gettext.NullTranslations()).gettext("network-trace")
 
     @classmethod
     def get_renderer(cls, template_helper):
@@ -153,6 +154,8 @@ class DisplayableNetworkTraceProblem(NetworkTraceProblem, DisplayableProblem):
         return template_helper.get_custom_renderer(os.path.join(os.path.dirname(__file__), 'templates'), False)
 
     def show_input(self, template_helper, language, seed):
+        translation = _translations.get(language, gettext.NullTranslations())
+
         rand = Random("{}#{}#{}".format(self.get_task().get_id(), self.get_id(), seed))
         stream = []
         trace = [(split_every_n(data.hex()), dissection) for data, dissection in self._trace]
@@ -164,14 +167,15 @@ class DisplayableNetworkTraceProblem(NetworkTraceProblem, DisplayableProblem):
             rand.shuffle(stream)
             rand.setstate(s)
             rand.shuffle(trace)
-        return str(DisplayableNetworkTraceProblem.get_renderer(template_helper).network_trace(self.get_id(), ParsableText.rst(self._header), trace, stream, self._shuffle, type=type, tuple=tuple))
+        return str(DisplayableNetworkTraceProblem.get_renderer(template_helper).network_trace(self.get_id(), ParsableText.rst(self.gettext(language, self._header)), trace, stream, self._shuffle, type=type, tuple=tuple, gettext=translation.gettext))
 
     @classmethod
-    def show_editbox(cls, template_helper, key):
-        return DisplayableNetworkTraceProblem.get_renderer(template_helper).network_trace_edit(key)
+    def show_editbox(cls, template_helper, key, language):
+        translation = _translations.get(language, gettext.NullTranslations())
+        return DisplayableNetworkTraceProblem.get_renderer(template_helper).network_trace_edit(key, gettext=translation.gettext)
 
     @classmethod
-    def show_editbox_templates(cls, template_helper, key):
+    def show_editbox_templates(cls, template_helper, key, language):
         return ""
 
 
@@ -199,7 +203,8 @@ def get_summary(packet):
 def get_hidden_fields(packet, hidden_fields):
     fields = []
     for h in hidden_fields:
-        hide_field(packet[1][0], h, fields)
+        for l in packet[1]:
+            hide_field(l, h, fields)
     return fields
 
 
@@ -257,6 +262,7 @@ def redact_field(d, to_redact):
 
 def init(plugin_manager, course_factory, client, plugin_config):
     """ Init the plugin """
+    global _translations
     plugin_manager.add_page('/plugins/network-trace/static/(.+)', StaticMockPage)
     plugin_manager.add_hook("javascript_header", lambda: "/plugins/network-trace/static/network-trace.js")
     plugin_manager.add_hook("css", lambda: "/plugins/network-trace/static/network-trace.css")
@@ -264,3 +270,9 @@ def init(plugin_manager, course_factory, client, plugin_config):
     plugin_manager.add_hook("javascript_header", lambda: "/plugins/network-trace/static/datatables.min.js")
     plugin_manager.add_hook("css", lambda: "/plugins/network-trace/static/datatables.min.css")
     course_factory.get_task_factory().add_problem_type(DisplayableNetworkTraceProblem)
+
+    # Init gettext
+    languages = ["en", "fr"]
+    _translations = {
+        lang: gettext.translation('messages', _dir_path + '/i18n', [lang]) for lang in languages
+    }
