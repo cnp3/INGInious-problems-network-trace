@@ -243,7 +243,7 @@ def hide_field(d, to_hide, hidden_fields):
             idx = field['showname'].rindex(':')
             field['showname'] = field['showname'][:idx].replace('0', '?').replace('1', '?') + ': ?'
         field['hidden'] = True
-        hidden_fields.append((field['name'], field['show'], int(field['pos']), int(field['pos']) + int(field['size']), extract_field_name_from(field['showname'])))
+        hidden_fields.append((field['name'], field['show'] if not field['show'].startswith('0x') else int(field['show'], base=16), int(field['pos']), int(field['pos']) + int(field['size']), extract_field_name_from(field['showname'])))
 
     return field, [hide_field(embedded_field, to_hide, hidden_fields) for embedded_field in embedded_fields]
 
