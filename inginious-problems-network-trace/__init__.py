@@ -92,7 +92,7 @@ class NetworkTraceProblem(Problem):
         if not order_is_correct:
             problem_feedback += '\n\n{}\n\n'.format(self._shuffle_feedback)
 
-        return sum(feedbacks.values()) == len(feedbacks) and order_is_correct, problem_feedback, [json.dumps({'fields': feedbacks, 'packets': packets})], 0
+        return sum(feedbacks.values()) == len(feedbacks) and order_is_correct, problem_feedback, [json.dumps({'fields': feedbacks, 'packets': packets})], 0, ""
 
     @classmethod
     def parse_problem(cls, problem_content):
