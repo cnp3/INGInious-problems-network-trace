@@ -35,17 +35,16 @@ class StaticMockPage(object):
 
 
 class NetworkTraceProblem(Problem):
-    def __init__(self, task, problemid, content):
+    def __init__(self, problemid, content, translations, taskfs):
         self._problemid = problemid
-        self._task = task
-        self._trace = load_trace(task, content.get('trace', ''), content.get('exclude', None))
+        self._trace = load_trace(taskfs, content.get('trace', ''), content.get('exclude', None))
         self._hidden_fields = content.get('hide', {})  # The fields to be hidden
         self._redacted_fields = content.get('redact', {})
         self._field_feedback = content.get('feedback', {})
         self._header = content.get('header', '')
         self._shuffle = content.get('shuffle', False)
         self._shuffle_feedback = (content.get('shuffle-feedback') or '').strip() or 'The order of packets is incorrect'
-        Problem.__init__(self, task, problemid, content)
+        Problem.__init__(self, problemid, content, translations, taskfs)
 
     @classmethod
     def get_type(cls):
@@ -141,8 +140,8 @@ def is_equal(expected, actual):
 
 
 class DisplayableNetworkTraceProblem(NetworkTraceProblem, DisplayableProblem):
-    def __init__(self, task, problemid, content):
-        NetworkTraceProblem.__init__(self, task, problemid, content)
+    def __init__(self, problemid, content, translations, taskfs):
+        NetworkTraceProblem.__init__(self, problemid, content, translations, taskfs)
 
     @classmethod
     def get_type_name(self, language):
@@ -156,7 +155,7 @@ class DisplayableNetworkTraceProblem(NetworkTraceProblem, DisplayableProblem):
     def show_input(self, template_helper, language, seed):
         translation = _translations.get(language, gettext.NullTranslations())
 
-        rand = Random("{}#{}#{}".format(self.get_task().get_id(), self.get_id(), seed))
+        rand = Random("{}#{}#{}".format(language, self.get_id(), seed))
         stream = []
         trace = [(split_every_n(data.hex()), dissection) for data, dissection in self._trace]
         trace = list(enumerate(hide(redact(trace, self._redacted_fields), self._hidden_fields)))
@@ -183,8 +182,7 @@ def split_every_n(string, n=2):
     return [''.join(x) for x in zip(*[iter(string)]*n)]
 
 
-def load_trace(task, filename, excluded=None):
-    fs = task.get_fs()
+def load_trace(fs, filename, excluded=None):
     if not fs.exists(filename) or not fs:
         return []
     try:
