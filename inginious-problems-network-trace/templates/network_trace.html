@@ -1,130 +1,85 @@
-$def with (id, header, trace, stream, shuffle, type, tuple, gettext)
+{# def with (id, header, trace, stream, shuffle, gettext) #}
 
-$code:
-    def decode(hex_byte):
-        if hex_byte == '??':
-            return '?'
-        c = chr(int('0x' + str(hex_byte), base=16))
-        return c if c.isprintable() else '.'
-
-    def print_struct(d, p_number, p_index):
-        ret = ''
-        for field, nested_fields in d:
-            s_idx = int(field['pos'])
-            e_idx = s_idx + int(field['size'])
-            nested  = field.get('showname', field.get('show'))
-            if field.get('hidden'):
-                nested += ' <input type="text" name="{id}:{pn}:{n}"> <span class="feedback" data-field="{id}:{pn}:{n}"></span>'.format(id=id, pn=p_index, n=field['name'])
-            else:
-                nested += '<ul data-start-offset="{}" data-end-offset="{}">{}</ul>'.format(s_idx, e_idx, print_struct(nested_fields, p_number, p_index))
-
-            ret += '<li data-start-offset="{}" data-end-offset="{}">{}</li>'.format(s_idx, e_idx, nested)
-        return ret
-
-    def print_dissection(p_number, p, p_index):
-        data, dissection = p
-        size = 2 * 8
-        ret = '<div class="row packet packet-{}"><div class="col-lg-6 hex-view">'.format(p_number)
-        for i in range(0, len(data), size):
-            ret += '<code class="address">{:04X}&nbsp;&nbsp;</code>'.format(i)
-            line = data[i:i+size]
-            for j in range(size):
-                ret += '<code class="byte">{}</code>'.format(line[j] if j < len(line) else '&nbsp;&nbsp;')
-                if j == 7:
-                    ret += '<code>&nbsp;&nbsp;</code>'
-
-            ret += '<code>&nbsp;&nbsp;</code>'
-            ret += '<br>'
-
-        ret += '<hr>'
-
-        for i in range(0, len(data), size):
-            ret += '<code class="address">{:04X}&nbsp;&nbsp;</code>'.format(i)
-            line = data[i:i+size]
-            for j in range(size):
-                ret += '<code class="char">{}</code>'.format(decode(line[j]) if j < len(line) else '&nbsp;')
-            ret += '<br>'
-
-        ret += '</div><div class="col-lg-6 structure" style="word-wrap: break-word;">'
-        ret += '<ul>{}</ul>'.format(print_struct(dissection, p_number, p_index))
-        return ret + '</div></div>'
-
-$:header
-<table id="table-$id" class="table table-bordered table-hover compact stream">
+{{ header | safe }}
+<table id="table-{{id}}" class="table table-bordered table-hover compact stream">
     <thead>
     <tr>
         <th>#</th>
-        <th>$:gettext('Length')</th>
-        <th>$:gettext('Summary')</th>
-        <th>$:gettext('Status')</th>
+        <th>{{ gettext('Length') }}</th>
+        <th>{{ gettext('Summary') }}</th>
+        <th>{{ gettext('Status') }}</th>
     </tr>
     </thead>
     <tbody>
-        $for index, length, resume, status in stream:
-            <tr data-packet-number="$loop.index0">
-                <input type="hidden" name="$id" value="$index">
-                <td>$loop.index0</td>
-                <td>$length $:gettext('bytes')</td>
-                <td><code>$resume</code></td>
-                <td class="packet-status">$:('&nbsp;<i class="fa fa-exclamation-triangle"></i>' if status == 'incomplete' else '')<span class="packet-status" data-packet-number="$index"></span></td>
+        {% for index, length, resume, status in stream %}
+            <tr data-packet-number="{{ loop.index0 }}">
+                <input type="hidden" name="{{ id }}" value="{{ index }}">
+                <td>{{ loop.index0 }}</td>
+                <td>{{ length }} {{ gettext('bytes') }}</td>
+                <td><code>{{ resume }}</code></td>
+                <td class="packet-status">{{ ('&nbsp;<i class="fa fa-exclamation-triangle"></i>' if status == 'incomplete' else '') | safe }}<span class="packet-status" data-packet-number="{{index}}"></span></td>
             </tr>
+        {% endfor %}
     </tbody>
 </table>
 <hr />
-$for i, p in trace:
-    $:print_dissection(loop.index0, p, i)
+
+{% for i, p in trace %}
+    {{ print_dissection(loop.index0, p, i) | safe }}
+{% endfor %}
 
 <script>
-    $$(window).ready(function () {
+    $(window).ready(function () {
         function handleOver(e) {
-            const start_idx = $$(e.target).data('start-offset');
-            const end_idx = $$(e.target).data('end-offset');
+            const start_idx = $(e.target).data('start-offset');
+            const end_idx = $(e.target).data('end-offset');
 
             if (start_idx == end_idx)
                 return;
 
-            $$('.shown .structure li').attr('style', '');
-            $$('.shown .structure ul').attr('style', '');
-            $$(e.target).css('background-color', '#566aff').css('color', 'white');
+            $('.shown .structure li').attr('style', '');
+            $('.shown .structure ul').attr('style', '');
+            $(e.target).css('background-color', '#566aff').css('color', 'white');
 
-            const bytes = $$('.shown .hex-view code.byte');
+            const bytes = $('.shown .hex-view code.byte');
             bytes.attr('style', '');
             bytes.slice(start_idx, end_idx).css('background-color', '#566aff').css('color', 'white');
 
-            const chars = $$('.shown .hex-view code.char');
+            const chars = $('.shown .hex-view code.char');
             chars.attr('style', '');
             chars.slice(start_idx, end_idx).css('background-color', '#566aff').css('color', 'white');
         }
 
-        $$('.structure li').click(handleOver);
-        $$('.structure ul').click(handleOver);
+        $('.structure li').click(handleOver);
+        $('.structure ul').click(handleOver);
 
-        $$('.packet').hide();
-        $$('.packet-0').addClass('shown').show();
-        $$('#table-$(id).stream tr').click(function () {
-            $$('#table-$(id).stream tr').attr('style', '');
-            $$(this).css('background-color', '#566aff').css('color', 'white');
-            const packet_number = parseInt($$(this).find('td').first().text());
-            $$('.packet').removeClass('shown').hide();
-            $$('.packet-' + packet_number).addClass('shown').show();
+        $('.packet').hide();
+        $('.packet-0').addClass('shown').show();
+        $('#table-{{id}}.stream tr').click(function () {
+            $('#table-{{id}}.stream tr').attr('style', '');
+            $(this).css('background-color', '#566aff').css('color', 'white');
+            const packet_number = parseInt($(this).find('td').first().text());
+            $('.packet').removeClass('shown').hide();
+            $('.packet-' + packet_number).addClass('shown').show();
         });
 
         const tableConfig = {stateSave: true, searching: false, rowReorder: false, ordering: false, paging: false, info: false, scrollY: '306px', scrollCollapse: true};
 
-        $if shuffle:
+        {% if shuffle %}
             tableConfig['rowReorder'] = {selector: 'td:nth-child(2)', update: false, dataSrc: 1};
+        {% endif %}
 
-        const table = $$('#table-$id').DataTable(tableConfig);
+        const table = $('#table-{{id}}').DataTable(tableConfig);
         table.on('row-reordered', function (e, diff, edit) {
             console.log(edit);
             if (diff.length >= 2) {
-                $$('#table-$(id).stream tr').attr('style', '');
-                const newRow = $$(edit.nodes[parseInt(edit.values[undefined])]);  // :mfl:
+                $('#table-{{id}}.stream tr').attr('style', '');
+                const newRow = $(edit.nodes[parseInt(edit.values[undefined])]);  // :mfl:
                 newRow.css('background-color', '#566aff').css('color', 'white');
                 const packet_number = parseInt(newRow.find('td').first().text());
                 console.log(newRow, packet_number);
-                $$('.packet').removeClass('shown').hide();
-                $$('.packet-' + packet_number).addClass('shown').show();
+                $('.packet').removeClass('shown').hide();
+                $('.packet-' + packet_number).addClass('shown').show();
             }
         });
     });

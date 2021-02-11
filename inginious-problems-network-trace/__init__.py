@@ -10,9 +10,11 @@ from inginious.frontend.parsable_text import ParsableText
 from inginious.frontend.task_problems import DisplayableProblem
 from yaml import load as yload, SafeLoader
 
+from .template_utils import decode, print_struct, print_dissection
 from .parse_tshark import parse_trace
 
 _dir_path = os.path.dirname(os.path.abspath(__file__))
+_template_path = os.path.join(_dir_path, "templates")
 _translations = None
 
 def load(stream):
@@ -147,11 +149,6 @@ class DisplayableNetworkTraceProblem(NetworkTraceProblem, DisplayableProblem):
     def get_type_name(self, language):
         return _translations.get(language, gettext.NullTranslations()).gettext("network-trace")
 
-    @classmethod
-    def get_renderer(cls, template_helper):
-        """ Get the renderer for this class problem """
-        return template_helper.get_custom_renderer(os.path.join(os.path.dirname(__file__), 'templates'), False)
-
     def show_input(self, template_helper, language, seed):
         translation = _translations.get(language, gettext.NullTranslations())
 
@@ -166,12 +163,17 @@ class DisplayableNetworkTraceProblem(NetworkTraceProblem, DisplayableProblem):
             rand.shuffle(stream)
             rand.setstate(s)
             rand.shuffle(trace)
-        return str(DisplayableNetworkTraceProblem.get_renderer(template_helper).network_trace(self.get_id(), ParsableText.rst(self.gettext(language, self._header)), trace, stream, self._shuffle, type=type, tuple=tuple, gettext=translation.gettext))
+        return template_helper.render("network_trace.html", template_folder=_template_path, id=self.get_id(),
+                                      header=ParsableText.rst(self.gettext(language, self._header)),
+                                      trace=trace, stream=stream, shuffle=self._shuffle,
+                                      gettext=translation.gettext, decode=decode, print_struct=print_struct,
+                                      print_dissection=print_dissection)
 
     @classmethod
     def show_editbox(cls, template_helper, key, language):
         translation = _translations.get(language, gettext.NullTranslations())
-        return DisplayableNetworkTraceProblem.get_renderer(template_helper).network_trace_edit(key, gettext=translation.gettext)
+        return template_helper.render("network_trace_edit.html", template_folder=_template_path, key=key,
+                                      gettext=translation.gettext)
 
     @classmethod
     def show_editbox_templates(cls, template_helper, key, language):
