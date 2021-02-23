@@ -4,11 +4,12 @@ import gettext
 from copy import deepcopy
 from random import Random
 
-import web
 from inginious.common.tasks_problems import Problem
+from inginious.frontend.pages.utils import INGIniousPage
 from inginious.frontend.parsable_text import ParsableText
 from inginious.frontend.task_problems import DisplayableProblem
 from yaml import load as yload, SafeLoader
+from flask import send_from_directory
 
 from .template_utils import decode, print_struct, print_dissection
 from .parse_tshark import parse_trace
@@ -21,16 +22,9 @@ def load(stream):
     return yload(stream, Loader=SafeLoader)
 
 
-class StaticMockPage(object):
+class StaticMockPage(INGIniousPage):
     def GET(self, path):
-        if not os.path.abspath(_dir_path) in os.path.abspath(os.path.join(_dir_path, path)):
-            raise web.notfound()
-
-        try:
-            with open(os.path.join(_dir_path, 'static', path), 'rb') as file:
-                return file.read()
-        except:
-            raise web.notfound()
+        return send_from_directory(os.path.join(_dir_path, "static"), path)
 
     def POST(self, path):
         return self.GET(path)
@@ -263,7 +257,7 @@ def redact_field(d, to_redact):
 def init(plugin_manager, course_factory, client, plugin_config):
     """ Init the plugin """
     global _translations
-    plugin_manager.add_page('/plugins/network-trace/static/(.+)', StaticMockPage)
+    plugin_manager.add_page('/plugins/network-trace/static/<path:path>', StaticMockPage.as_view("networktracestaticpage"))
     plugin_manager.add_hook("javascript_header", lambda: "/plugins/network-trace/static/network-trace.js")
     plugin_manager.add_hook("css", lambda: "/plugins/network-trace/static/network-trace.css")
     plugin_manager.add_hook("javascript_header", lambda: "/plugins/network-trace/static/js-yaml.min.js")
