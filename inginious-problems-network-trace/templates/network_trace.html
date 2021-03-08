@@ -25,7 +25,7 @@
 <hr />
 
 {% for i, p in trace %}
-    {{ print_dissection(loop.index0, p, i) | safe }}
+    {{ print_dissection(id, loop.index0, p, i) | safe }}
 {% endfor %}
 
 <script>

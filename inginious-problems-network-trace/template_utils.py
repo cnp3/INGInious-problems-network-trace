@@ -5,7 +5,7 @@ def decode(hex_byte):
     return c if c.isprintable() else '.'
 
 
-def print_struct(d, p_number, p_index):
+def print_struct(id, d, p_number, p_index):
     ret = ''
     for field, nested_fields in d:
         s_idx = int(field['pos'])
@@ -16,14 +16,14 @@ def print_struct(d, p_number, p_index):
                 id=id, pn=p_index, n=field['name'])
         else:
             nested += '<ul data-start-offset="{}" data-end-offset="{}">{}</ul>'.format(s_idx, e_idx,
-                                                                                       print_struct(nested_fields,
+                                                                                       print_struct(id, nested_fields,
                                                                                                     p_number, p_index))
 
         ret += '<li data-start-offset="{}" data-end-offset="{}">{}</li>'.format(s_idx, e_idx, nested)
     return ret
 
 
-def print_dissection(p_number, p, p_index):
+def print_dissection(id, p_number, p, p_index):
     data, dissection = p
     size = 2 * 8
     ret = '<div class="row packet packet-{}"><div class="col-lg-6 hex-view">'.format(p_number)
@@ -48,5 +48,5 @@ def print_dissection(p_number, p, p_index):
         ret += '<br>'
 
     ret += '</div><div class="col-lg-6 structure" style="word-wrap: break-word;">'
-    ret += '<ul>{}</ul>'.format(print_struct(dissection, p_number, p_index))
+    ret += '<ul>{}</ul>'.format(print_struct(id, dissection, p_number, p_index))
     return ret + '</div></div>'
