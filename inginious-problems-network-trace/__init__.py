@@ -266,7 +266,6 @@ def init(plugin_manager, course_factory, client, plugin_config):
     course_factory.get_task_factory().add_problem_type(DisplayableNetworkTraceProblem)
 
     # Init gettext
-    languages = ["en", "fr"]
-    _translations = {
-        lang: gettext.translation('messages', _dir_path + '/i18n', [lang]) for lang in languages
-    }
+    _translations = {"en": gettext.NullTranslations()} # English does not need translation ;-)
+    for lang in ["fr", "he"]:
+        _translations[lang] = gettext.translation('messages', _dir_path + '/i18n', [lang])
