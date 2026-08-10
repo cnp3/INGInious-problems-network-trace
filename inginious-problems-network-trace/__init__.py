@@ -9,7 +9,7 @@ from inginious.frontend.pages.utils import INGIniousPage
 from inginious.frontend.parsable_text import ParsableText
 from inginious.frontend.task_problems import DisplayableProblem
 from yaml import load as yload, SafeLoader
-from flask import send_from_directory
+from flask import send_from_directory, render_template
 
 from .template_utils import decode, print_struct, print_dissection
 from .parse_tshark import parse_trace
@@ -143,7 +143,7 @@ class DisplayableNetworkTraceProblem(NetworkTraceProblem, DisplayableProblem):
     def get_type_name(self, language):
         return _translations.get(language, gettext.NullTranslations()).gettext("network-trace")
 
-    def show_input(self, template_helper, language, seed):
+    def show_input(self, language, seed):
         translation = _translations.get(language, gettext.NullTranslations())
 
         rand = Random("{}#{}#{}".format(language, self.get_id(), seed))
@@ -157,20 +157,20 @@ class DisplayableNetworkTraceProblem(NetworkTraceProblem, DisplayableProblem):
             rand.shuffle(stream)
             rand.setstate(s)
             rand.shuffle(trace)
-        return template_helper.render("network_trace.html", template_folder=_template_path, id=self.get_id(),
+        return render_template("network-trace/network_trace.html", id=self.get_id(),
                                       header=ParsableText.rst(self.gettext(language, self._header)),
                                       trace=trace, stream=stream, shuffle=self._shuffle,
                                       gettext=translation.gettext, decode=decode, print_struct=print_struct,
                                       print_dissection=print_dissection)
 
     @classmethod
-    def show_editbox(cls, template_helper, key, language):
+    def show_editbox(cls, key, language):
         translation = _translations.get(language, gettext.NullTranslations())
-        return template_helper.render("network_trace_edit.html", template_folder=_template_path, key=key,
+        return render_template("network-trace/network_trace_edit.html", key=key,
                                       gettext=translation.gettext)
 
     @classmethod
-    def show_editbox_templates(cls, template_helper, key, language):
+    def show_editbox_templates(cls, key, language):
         return ""
 
 
@@ -254,7 +254,7 @@ def redact_field(d, to_redact):
     return field, [redact_field(embedded_field, to_redact) for embedded_field in embedded_fields]
 
 
-def init(plugin_manager, course_factory, client, plugin_config):
+def init(plugin_manager, client, plugin_config):
     """ Init the plugin """
     global _translations
     plugin_manager.add_page('/plugins/network-trace/static/<path:path>', StaticMockPage.as_view("networktracestaticpage"))
@@ -263,7 +263,7 @@ def init(plugin_manager, course_factory, client, plugin_config):
     plugin_manager.add_hook("javascript_header", lambda: "/plugins/network-trace/static/js-yaml.min.js")
     plugin_manager.add_hook("javascript_header", lambda: "/plugins/network-trace/static/datatables.min.js")
     plugin_manager.add_hook("css", lambda: "/plugins/network-trace/static/datatables.min.css")
-    course_factory.get_task_factory().add_problem_type(DisplayableNetworkTraceProblem)
+    plugin_manager.add_template_prefix("network-trace", _template_path)
 
     # Init gettext
     _translations = {"en": gettext.NullTranslations()} # English does not need translation ;-)
